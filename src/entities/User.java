@@ -4,23 +4,23 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class User {
-    private String userId;
+    private int userId;
     private String name;
     private int age;
     private List<CarbonRecord> carbonRecords;
 
-    public User(String userId, String name, int age) {
+    public User(int userId, String name, int age) {
         this.userId = userId;
         this.name = name;
         this.age = age;
         this.carbonRecords = new ArrayList<>();
     }
 
-    public String getUserId() {
+    public int getUserId() {
         return userId;
     }
 
-    public void setUserId(String userId) {
+    public void setUserId(int userId) {
         this.userId = userId;
     }
 
@@ -67,5 +67,9 @@ public class User {
     @Override
     public String toString() {
         return "User ID: " + userId + ", Name: " + name + ", Age: " + age + ", Carbon Records: " + carbonRecords.size();
+    }
+
+    public int getId() {
+        return userId;
     }
 }
