@@ -1,16 +1,24 @@
 package entities;
 
+import enums.TypeConsommation;
 import java.time.LocalDate;
 
 public abstract class CarbonRecord {
-    private LocalDate startDate;
-    private LocalDate endDate;
-    protected double amount; // Accessible by subclasses
+    protected LocalDate startDate;
+    protected LocalDate endDate;
+    protected double amount;
+    protected TypeConsommation type;
 
-    public CarbonRecord(LocalDate startDate, LocalDate endDate) {
+    public CarbonRecord(LocalDate startDate, LocalDate endDate, double amount, TypeConsommation type) {
         this.startDate = startDate;
         this.endDate = endDate;
+        this.amount = amount;
+        this.type = type;
     }
+
+
+    // Abstract method to be implemented by subclasses
+    public abstract void calculerImpact();
 
     public LocalDate getStartDate() {
         return startDate;
@@ -24,11 +32,12 @@ public abstract class CarbonRecord {
         return amount;
     }
 
-    // Abstract method to be implemented by subclasses
-    public abstract void calculerImpact();
+    public TypeConsommation getType() {
+        return type;
+    }
 
     @Override
     public String toString() {
-        return "Start Date: " + startDate + ", End Date: " + endDate + ", Amount: " + amount + " units";
+        return "Start Date: " + startDate + ", End Date: " + endDate + ", Amount: " + amount + " units, Type: " + type;
     }
 }

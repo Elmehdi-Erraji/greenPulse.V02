@@ -1,15 +1,17 @@
 package entities;
 
 import java.time.LocalDate;
+import enums.TypeConsommation;
 
 public class Alimentation extends CarbonRecord {
     private double poids; // weight of food consumed
     private String typeAliment; // type of food (meat, vegetable)
 
     public Alimentation(LocalDate startDate, LocalDate endDate, double poids, String typeAliment) {
-        super(startDate, endDate);
+        super(startDate, endDate, 0, TypeConsommation.ALIMENTATION); // Set type to ALIMENTATION and amount to 0 initially
         this.poids = poids;
         this.typeAliment = typeAliment;
+        calculerImpact();  // Calculate impact during construction
     }
 
     @Override
