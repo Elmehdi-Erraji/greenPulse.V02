@@ -3,26 +3,17 @@ package entities;
 import java.time.LocalDate;
 
 public class Logement extends CarbonRecord {
-    private double consommationEnergie; // energy consumption
-    private String typeEnergie; // energy type (electricity, gas)
 
-    public Logement(LocalDate startDate, LocalDate endDate, double consommationEnergie, String typeEnergie) {
-        super(startDate, endDate);
-        this.consommationEnergie = consommationEnergie;
-        this.typeEnergie = typeEnergie;
+    public double consommationEnergie;
+    public String typeEnergie;
+
+    public Logement(LocalDate startDate, LocalDate endDate, double amount) {
+        super(startDate, endDate, amount, "Logement");
     }
 
     @Override
-    public void calculerImpact() {
-        if ("electricite".equalsIgnoreCase(typeEnergie)) {
-            this.amount = consommationEnergie * 1.5;
-        } else if ("gaz".equalsIgnoreCase(typeEnergie)) {
-            this.amount = consommationEnergie * 2.0;
-        }
-    }
-
-    @Override
-    public String toString() {
-        return "Logement (" + typeEnergie + ") - Consommation: " + consommationEnergie + ", Impact: " + amount + " units";
+    public double calculateImpact() {
+        // Example: assume 0.233 kg CO2 per unit of energy usage for housing
+        return amount * 0.233;
     }
 }
