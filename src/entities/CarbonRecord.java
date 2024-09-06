@@ -2,15 +2,14 @@ package entities;
 
 import java.time.LocalDate;
 
-public class CarbonRecord {
+public abstract class CarbonRecord {
     private LocalDate startDate;
     private LocalDate endDate;
-    private double amount;
+    protected double amount; // Accessible by subclasses
 
-    public CarbonRecord(LocalDate startDate, LocalDate endDate, double amount) {
+    public CarbonRecord(LocalDate startDate, LocalDate endDate) {
         this.startDate = startDate;
         this.endDate = endDate;
-        this.amount = amount;
     }
 
     public LocalDate getStartDate() {
@@ -24,6 +23,9 @@ public class CarbonRecord {
     public double getAmount() {
         return amount;
     }
+
+    // Abstract method to be implemented by subclasses
+    public abstract void calculerImpact();
 
     @Override
     public String toString() {
