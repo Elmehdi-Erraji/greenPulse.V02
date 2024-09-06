@@ -1,4 +1,4 @@
-package enums;
+package entities.enums;
 
 public enum TypeConsommation {
     TRANSPORT,

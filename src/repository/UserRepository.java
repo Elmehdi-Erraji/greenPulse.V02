@@ -19,10 +19,11 @@ public class UserRepository {
     }
 
     public void createUser(User user) throws SQLException {
-        String sql = "INSERT INTO users (name, age) VALUES (?, ?)";
+        String sql = "INSERT INTO users (id,name, age) VALUES (?,?, ?)";
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setString(1, user.getName());
-            statement.setInt(2, user.getAge());
+            statement.setInt(1, user.getId());
+            statement.setString(2, user.getName());
+            statement.setInt(3, user.getAge());
             statement.executeUpdate();
         }
     }
