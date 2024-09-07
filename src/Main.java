@@ -20,6 +20,14 @@ public class Main {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+        try {
+            Database database = Database.getInstance();
+
+            database.getConnection();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
 
     }
 }
