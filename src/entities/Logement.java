@@ -3,17 +3,41 @@ package entities;
 import java.time.LocalDate;
 
 public class Logement extends CarbonRecord {
+    private double energyConsumption;
+    private String energyType;
 
-    public double consommationEnergie;
-    public String typeEnergie;
+    public Logement(LocalDate startDate, LocalDate endDate, double amount, double energyConsumption, String energyType, int userId) {
+        super(startDate, endDate, amount, "LOGEMENT", userId);
+        this.energyConsumption = energyConsumption;
+        this.energyType = energyType;
+    }
 
-    public Logement(LocalDate startDate, LocalDate endDate, double amount) {
-        super(startDate, endDate, amount, "Logement");
+    // Getters and Setters
+    public double getEnergyConsumption() {
+        return energyConsumption;
+    }
+
+    public void setEnergyConsumption(double energyConsumption) {
+        this.energyConsumption = energyConsumption;
+    }
+
+    public String getEnergyType() {
+        return energyType;
+    }
+
+    public void setEnergyType(String energyType) {
+        this.energyType = energyType;
     }
 
     @Override
     public double calculateImpact() {
-        // Example: assume 0.233 kg CO2 per unit of energy usage for housing
-        return amount * 0.233;
+        // Implement impact calculation for Logement
+        // Placeholder implementation; replace with actual logic
+        return energyConsumption * 0.5; // Example: impact is energy consumption multiplied by a factor
+    }
+
+    @Override
+    public String toString() {
+        return super.toString() + ", Energy Consumption: " + energyConsumption + " kWh, Energy Type: " + energyType;
     }
 }

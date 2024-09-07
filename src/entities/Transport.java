@@ -3,17 +3,41 @@ package entities;
 import java.time.LocalDate;
 
 public class Transport extends CarbonRecord {
+    private double distance;
+    private String vehicleType;
 
-    public double distanceParcourue ;
-    public String typeDeVehicule;
+    public Transport(LocalDate startDate, LocalDate endDate, double amount, double distance, String vehicleType, int userId) {
+        super(startDate, endDate, amount, "TRANSPORT", userId);
+        this.distance = distance;
+        this.vehicleType = vehicleType;
+    }
 
-    public Transport(LocalDate startDate, LocalDate endDate, double amount) {
-        super(startDate, endDate, amount, "Transport");
+    // Getters and Setters
+    public double getDistance() {
+        return distance;
+    }
+
+    public void setDistance(double distance) {
+        this.distance = distance;
+    }
+
+    public String getVehicleType() {
+        return vehicleType;
+    }
+
+    public void setVehicleType(String vehicleType) {
+        this.vehicleType = vehicleType;
     }
 
     @Override
     public double calculateImpact() {
-        // Example: assume 2.31 kg CO2 per unit of transport usage
-        return amount * 2.31;
+        // Implement impact calculation for Transport
+        // Placeholder implementation; replace with actual logic
+        return distance * 0.1; // Example: impact is distance multiplied by a factor
+    }
+
+    @Override
+    public String toString() {
+        return super.toString() + ", Distance: " + distance + " km, Vehicle Type: " + vehicleType;
     }
 }
