@@ -32,16 +32,32 @@ public abstract class CarbonRecord {
         return startDate;
     }
 
+    public void setStartDate(LocalDate startDate) {
+        this.startDate = startDate;
+    }
+
     public LocalDate getEndDate() {
         return endDate;
+    }
+
+    public void setEndDate(LocalDate endDate) {
+        this.endDate = endDate;
     }
 
     public BigDecimal getAmount() {
         return BigDecimal.valueOf(amount);
     }
 
+    public void setAmount(double amount) {
+        this.amount = amount;
+    }
+
     public String getType() {
         return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
     }
 
     public int getUserId() {
