@@ -1,25 +1,25 @@
 package entities;
 
+import entities.enums.TypeConsommation;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
 public abstract class CarbonRecord {
-    protected int id; // Add an id field
-    protected LocalDate startDate;
-    protected LocalDate endDate;
-    protected double amount;
-    protected String type;
-    protected int userId;  // Associate carbon record with a user
+    private int id;
+    private LocalDate startDate;
+    private LocalDate endDate;
+    private BigDecimal amount;
+    private TypeConsommation type;
+    private int userId;
 
-    public CarbonRecord(int id, LocalDate startDate, LocalDate endDate, double amount, String type, int userId) {
-        this.id = id;
+    public CarbonRecord(LocalDate startDate, LocalDate endDate, BigDecimal amount, TypeConsommation type, int userId) {
         this.startDate = startDate;
         this.endDate = endDate;
         this.amount = amount;
         this.type = type;
-        this.userId = userId;
     }
 
+    // Getters and setters
     public int getId() {
         return id;
     }
@@ -45,18 +45,18 @@ public abstract class CarbonRecord {
     }
 
     public BigDecimal getAmount() {
-        return BigDecimal.valueOf(amount);
+        return amount;
     }
 
-    public void setAmount(double amount) {
+    public void setAmount(BigDecimal amount) {
         this.amount = amount;
     }
 
-    public String getType() {
+    public TypeConsommation getType() {
         return type;
     }
 
-    public void setType(String type) {
+    public void setType(TypeConsommation type) {
         this.type = type;
     }
 
@@ -68,11 +68,12 @@ public abstract class CarbonRecord {
         this.userId = userId;
     }
 
-    // Abstract method to be implemented by subclasses
-    public abstract double calculateImpact();
-
     @Override
     public String toString() {
-        return "ID: " + id + ", Start Date: " + startDate + ", End Date: " + endDate + ", Amount: " + amount + " units, Type: " + type;
+        return String.format("CarbonRecord [id=%d, startDate=%s, endDate=%s, amount=%s, type=%s, userId=%d]",
+                id, startDate, endDate, amount, type, userId);
     }
+
+    // Abstract method to be implemented by subclasses
+    public abstract double calculateImpact();
 }

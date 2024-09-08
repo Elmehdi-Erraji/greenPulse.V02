@@ -4,24 +4,46 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class User {
-    private int userId;
+    private int id;  // Changed from Id to id for consistency
     private String name;
     private int age;
     private List<CarbonRecord> carbonRecords;
 
-    public User(int userId, String name, int age) {
-        this.userId = userId;
+    // Constructor for creating a new user without carbon records
+    public User(String name, int age) {
         this.name = name;
         this.age = age;
-        this.carbonRecords = new ArrayList<>();
+        this.carbonRecords = new ArrayList<>();  // Initialize the list
     }
 
-    public int getUserId() {
-        return userId;
+    // Constructor for loading from the database with an empty carbon records list
+    public User(int id, String name, int age) {
+        this.id = id;
+        this.name = name;
+        this.age = age;
+        this.carbonRecords = new ArrayList<>();  // Initialize the list
     }
 
-    public void setUserId(int userId) {
-        this.userId = userId;
+    // Constructor for loading from the database with an existing carbon records list
+    public User(int id, String name, int age, List<CarbonRecord> carbonRecords) {
+        this.id = id;
+        this.name = name;
+        this.age = age;
+        this.carbonRecords = carbonRecords != null ? carbonRecords : new ArrayList<>();  // Ensure the list is not null
+    }
+
+    // Default constructor for deserialization (optional)
+    public User() {
+        this.carbonRecords = new ArrayList<>();  // Initialize the list
+    }
+
+    // Getters and setters
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 
     public String getName() {
@@ -44,32 +66,12 @@ public class User {
         return carbonRecords;
     }
 
-    public void addCarbonRecord(CarbonRecord carbonRecord) {
-        this.carbonRecords.add(carbonRecord);
-    }
-
-    public double getTotalCarbonConsumption() {
-        double total = 0.0;
-        for (CarbonRecord record : carbonRecords) {
-            total += record.getAmount();
-        }
-        return total;
-    }
-
-    public double getTotalCarbonImpact() {
-        double totalImpact = 0.0;
-        for (CarbonRecord record : carbonRecords) {
-            totalImpact += record.calculateImpact();
-        }
-        return totalImpact;
+    public void setCarbonRecords(List<CarbonRecord> carbonRecords) {
+        this.carbonRecords = carbonRecords != null ? carbonRecords : new ArrayList<>();
     }
 
     @Override
     public String toString() {
-        return "User ID: " + userId + ", Name: " + name + ", Age: " + age + ", Carbon Records: " + carbonRecords.size();
-    }
-
-    public int getId() {
-        return userId;
+        return String.format("User [id=%d, name=%s, age=%d, carbonRecords=%s]", id, name, age, carbonRecords);
     }
 }

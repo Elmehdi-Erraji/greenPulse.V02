@@ -1,17 +1,17 @@
 package services;
 
-import java.sql.SQLException;
-import java.util.List;
-
 import entities.User;
 import repository.UserRepository;
 
-public class UserService {
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.List;
 
+public class UserService {
     private UserRepository userRepository;
 
-    public UserService() throws SQLException {
-        this.userRepository = new UserRepository();
+    public UserService(Connection connection) {
+        this.userRepository = new UserRepository(connection);
     }
 
     public void createUser(User user) throws SQLException {

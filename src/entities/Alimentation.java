@@ -1,18 +1,30 @@
 package entities;
 
+import entities.enums.TypeConsommation;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 public class Alimentation extends CarbonRecord {
+    private double foodConsumption;
     private String foodType;
-    private double weight;
 
-    public Alimentation(LocalDate startDate, LocalDate endDate, double amount, String foodType, double weight, int userId) {
-        super(startDate, endDate, amount, "ALIMENTATION", userId);
+    // Constructor
+    public Alimentation(LocalDate startDate, LocalDate endDate, BigDecimal amount, TypeConsommation type, int userId, double foodConsumption, String foodType) {
+        super(startDate, endDate, amount, type, userId); // Call to the superclass constructor
+        this.foodConsumption = foodConsumption;
         this.foodType = foodType;
-        this.weight = weight;
+        setUserId(userId); // Set userId using the setter from CarbonRecord
     }
 
-    // Getters and Setters
+    // Getters and setters
+    public double getFoodConsumption() {
+        return foodConsumption;
+    }
+
+    public void setFoodConsumption(double foodConsumption) {
+        this.foodConsumption = foodConsumption;
+    }
+
     public String getFoodType() {
         return foodType;
     }
@@ -21,23 +33,14 @@ public class Alimentation extends CarbonRecord {
         this.foodType = foodType;
     }
 
-    public double getWeight() {
-        return weight;
-    }
-
-    public void setWeight(double weight) {
-        this.weight = weight;
-    }
-
     @Override
     public double calculateImpact() {
-        // Implement impact calculation for Alimentation
-        // Placeholder implementation; replace with actual logic
-        return weight * 0.2; // Example: impact is weight multiplied by a factor
+        // Example calculation (this should be replaced with actual logic)
+        return foodConsumption * 0.20; // Assuming 0.20 is a conversion factor for impact
     }
 
     @Override
     public String toString() {
-        return super.toString() + ", Food Type: " + foodType + ", Weight: " + weight + " kg";
+        return String.format("Alimentation [foodConsumption=%.2f, foodType=%s, %s]", foodConsumption, foodType, super.toString());
     }
 }

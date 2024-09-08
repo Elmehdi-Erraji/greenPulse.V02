@@ -1,18 +1,21 @@
 package entities;
 
+import entities.enums.TypeConsommation;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 public class Transport extends CarbonRecord {
     private double distance;
     private String vehicleType;
 
-    public Transport(LocalDate startDate, LocalDate endDate, double amount, double distance, String vehicleType, int userId) {
-        super(startDate, endDate, amount, "TRANSPORT", userId);
+    // Constructor
+    public Transport(LocalDate startDate, LocalDate endDate, BigDecimal amount, TypeConsommation type, int userId, double distance, String vehicleType) {
+        super(startDate, endDate, amount, type, userId);
         this.distance = distance;
         this.vehicleType = vehicleType;
     }
 
-    // Getters and Setters
+    // Getters and setters
     public double getDistance() {
         return distance;
     }
@@ -31,13 +34,12 @@ public class Transport extends CarbonRecord {
 
     @Override
     public double calculateImpact() {
-        // Implement impact calculation for Transport
-        // Placeholder implementation; replace with actual logic
-        return distance * 0.1; // Example: impact is distance multiplied by a factor
+        // Example calculation (this should be replaced with actual logic)
+        return distance * 0.25; // Assuming 0.25 is a conversion factor for impact
     }
 
     @Override
     public String toString() {
-        return super.toString() + ", Distance: " + distance + " km, Vehicle Type: " + vehicleType;
+        return String.format("Transport [distance=%.2f, vehicleType=%s, %s]", distance, vehicleType, super.toString());
     }
 }

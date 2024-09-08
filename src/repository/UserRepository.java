@@ -7,23 +7,21 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import config.Database;
 import entities.User;
 
 public class UserRepository {
 
     private Connection connection;
 
-    public UserRepository() throws SQLException {
-        this.connection = Database.getInstance().getConnection();
+    public UserRepository(Connection connection) {
+        this.connection = connection;
     }
 
     public void createUser(User user) throws SQLException {
-        String sql = "INSERT INTO users (id,name, age) VALUES (?,?, ?)";
+        String sql = "INSERT INTO users (name, age) VALUES (?, ?)";
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setInt(1, user.getId());
-            statement.setString(2, user.getName());
-            statement.setInt(3, user.getAge());
+            statement.setString(1, user.getName());
+            statement.setInt(2, user.getAge());
             statement.executeUpdate();
         }
     }
@@ -32,9 +30,14 @@ public class UserRepository {
         String sql = "SELECT * FROM users WHERE id = ?";
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setInt(1, id);
-            ResultSet resultSet = statement.executeQuery();
-            if (resultSet.next()) {
-                return new User(resultSet.getInt("id"), resultSet.getString("name"), resultSet.getInt("age"));
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    return new User(
+                            resultSet.getInt("id"),
+                            resultSet.getString("name"),
+                            resultSet.getInt("age")
+                    );
+                }
             }
         }
         return null;
@@ -46,7 +49,11 @@ public class UserRepository {
         try (PreparedStatement statement = connection.prepareStatement(sql);
              ResultSet resultSet = statement.executeQuery()) {
             while (resultSet.next()) {
-                users.add(new User(resultSet.getInt("id"), resultSet.getString("name"), resultSet.getInt("age")));
+                users.add(new User(
+                        resultSet.getInt("id"),
+                        resultSet.getString("name"),
+                        resultSet.getInt("age")
+                ));
             }
         }
         return users;

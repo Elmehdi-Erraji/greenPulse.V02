@@ -1,18 +1,21 @@
 package entities;
 
+import entities.enums.TypeConsommation;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 public class Logement extends CarbonRecord {
     private double energyConsumption;
     private String energyType;
 
-    public Logement(LocalDate startDate, LocalDate endDate, double amount, double energyConsumption, String energyType, int userId) {
-        super(startDate, endDate, amount, "LOGEMENT", userId);
+    // Constructor
+    public Logement(LocalDate startDate, LocalDate endDate, BigDecimal amount, TypeConsommation type, int userId, double energyConsumption, String energyType) {
+        super(startDate, endDate, amount, type, userId);
         this.energyConsumption = energyConsumption;
         this.energyType = energyType;
     }
 
-    // Getters and Setters
+    // Getters and setters
     public double getEnergyConsumption() {
         return energyConsumption;
     }
@@ -31,13 +34,12 @@ public class Logement extends CarbonRecord {
 
     @Override
     public double calculateImpact() {
-        // Implement impact calculation for Logement
-        // Placeholder implementation; replace with actual logic
-        return energyConsumption * 0.5; // Example: impact is energy consumption multiplied by a factor
+        // Example calculation (this should be replaced with actual logic)
+        return energyConsumption * 0.15; // Assuming 0.15 is a conversion factor for impact
     }
 
     @Override
     public String toString() {
-        return super.toString() + ", Energy Consumption: " + energyConsumption + " kWh, Energy Type: " + energyType;
+        return String.format("Logement [energyConsumption=%.2f, energyType=%s, %s]", energyConsumption, energyType, super.toString());
     }
 }
