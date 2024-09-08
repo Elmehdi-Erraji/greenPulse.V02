@@ -16,6 +16,10 @@ public class Alimentation extends CarbonRecord {
         setUserId(userId); // Set userId using the setter from CarbonRecord
     }
 
+    public Alimentation(LocalDate startDate, LocalDate endDate, BigDecimal amount, TypeConsommation type, int userId) {
+        super();
+    }
+
     // Getters and setters
     public double getFoodConsumption() {
         return foodConsumption;

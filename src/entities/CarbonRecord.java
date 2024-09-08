@@ -19,6 +19,10 @@ public abstract class CarbonRecord {
         this.type = type;
     }
 
+    public CarbonRecord() {
+
+    }
+
     // Getters and setters
     public int getId() {
         return id;

@@ -29,4 +29,9 @@ public class CarbonRecordService {
     public void deleteCarbonRecord(int id) throws SQLException {
         carbonRecordRepository.deleteCarbonRecord(id);
     }
+
+    public void updateCarbonRecord(CarbonRecord record) throws SQLException {
+        carbonRecordRepository.updateCarbonRecord(record);
+    }
+
 }

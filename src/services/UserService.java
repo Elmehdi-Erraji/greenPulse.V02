@@ -4,11 +4,16 @@ import entities.User;
 import repository.UserRepository;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
 public class UserService {
     private UserRepository userRepository;
+    private Connection connection;
+
+
 
     public UserService(Connection connection) {
         this.userRepository = new UserRepository(connection);
@@ -32,5 +37,18 @@ public class UserService {
 
     public void deleteUser(int id) throws SQLException {
         userRepository.deleteUser(id);
+    }
+
+    public boolean doesUserExist(int userId) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM users WHERE id = ?";
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, userId);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    return resultSet.getInt(1) > 0;
+                }
+            }
+        }
+        return false;
     }
 }
