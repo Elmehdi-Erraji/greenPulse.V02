@@ -17,7 +17,6 @@ public class CarbonRecordService {
     public void createCarbonRecord(CarbonRecord record) throws SQLException {
         carbonRecordRepository.createCarbonRecord(record);
     }
-
     public CarbonRecord getCarbonRecordById(int id) throws SQLException {
         return carbonRecordRepository.getCarbonRecordById(id);
     }

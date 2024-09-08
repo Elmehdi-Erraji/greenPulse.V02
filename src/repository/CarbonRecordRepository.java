@@ -21,25 +21,36 @@ public class CarbonRecordRepository {
     }
 
     public void createCarbonRecord(CarbonRecord record) throws SQLException {
-        String sql = "INSERT INTO carbonRecords (start_date, end_date, amount, type, user_id) VALUES (?, ?, ?, ?, ?)";
-        try (PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            statement.setDate(1, Date.valueOf(record.getStartDate()));
-            statement.setDate(2, Date.valueOf(record.getEndDate()));
+        String sql = "INSERT INTO carbonrecords (start_date, end_date, amount, type, user_id, distance, vehicle_type, energy_consumption, energy_type) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setDate(1, java.sql.Date.valueOf(record.getStartDate()));
+            statement.setDate(2, java.sql.Date.valueOf(record.getEndDate()));
             statement.setBigDecimal(3, record.getAmount());
             statement.setString(4, record.getType().name());
             statement.setInt(5, record.getUserId());
-            statement.executeUpdate();
 
-            try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
-                if (generatedKeys.next()) {
-                    int generatedId = generatedKeys.getInt(1);
-                    // Insert into related tables based on the type
-                    insertIntoRelatedTable(record, generatedId);
-                }
+            if (record instanceof Transport) {
+                Transport transport = (Transport) record;
+                statement.setDouble(6, transport.getDistance());
+                statement.setString(7, transport.getVehicleType());
+                statement.setNull(8, java.sql.Types.NULL); // For energy consumption
+                statement.setNull(9, java.sql.Types.NULL); // For energy type
+            } else if (record instanceof Logement) {
+                Logement logement = (Logement) record;
+                statement.setNull(6, java.sql.Types.NULL); // For distance
+                statement.setNull(7, java.sql.Types.NULL); // For vehicle type
+                statement.setDouble(8, logement.getEnergyConsumption());
+                statement.setString(9, logement.getEnergyType());
+            } else if (record instanceof Alimentation) {
+                statement.setNull(6, java.sql.Types.NULL); // For distance
+                statement.setNull(7, java.sql.Types.NULL); // For vehicle type
+                statement.setNull(8, java.sql.Types.NULL); // For energy consumption
+                statement.setNull(9, java.sql.Types.NULL); // For energy type
             }
+
+            statement.executeUpdate();
         }
     }
-
     private void insertIntoRelatedTable(CarbonRecord record, int recordId) throws SQLException {
         String sql = null;
         try (PreparedStatement statement = connection.prepareStatement(sql)) {

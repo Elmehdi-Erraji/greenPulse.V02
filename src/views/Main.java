@@ -173,41 +173,40 @@ public class Main {
     }
 
     private static void addCarbonRecord(Scanner scanner, UserService userService, CarbonRecordService carbonRecordService) throws SQLException {
-        // Prompt for and read the start date
         System.out.print("Enter start date (yyyy-MM-dd): ");
         LocalDate startDate = LocalDate.parse(scanner.nextLine());
-
-        // Prompt for and read the end date
         System.out.print("Enter end date (yyyy-MM-dd): ");
         LocalDate endDate = LocalDate.parse(scanner.nextLine());
-
-        // Prompt for and read the amount
         System.out.print("Enter amount: ");
         BigDecimal amount = new BigDecimal(scanner.nextLine());
-
-        // Prompt for and read the type
         System.out.print("Enter type (TRANSPORT, LOGEMENT, ALIMENTATION): ");
         String typeStr = scanner.nextLine();
         TypeConsommation type = TypeConsommation.valueOf(typeStr.toUpperCase());
-
-        // Prompt for and read the user ID
         System.out.print("Enter user ID: ");
         int userId = scanner.nextInt();
-        scanner.nextLine(); // Consume the newline character
+        scanner.nextLine(); // Consume newline
 
-        // Check if the user exists
-        if (userService.getUserById(userId) == null) {
-            System.out.println("User with ID " + userId + " does not exist.");
+        // Debugging: Print the user ID
+        System.out.println("User ID entered: " + userId);
+
+        // Validate user ID
+        if (userId <= 0) {
+            System.out.println("Invalid User ID. It must be a positive integer.");
             return;
         }
 
-        // Create the appropriate CarbonRecord based on the type
+        // Check if user exists
+        if (!userService.isUserExist(userId)) {
+            System.out.println("User ID does not exist. Please enter a valid User ID.");
+            return;
+        }
+
         CarbonRecord record;
         switch (type) {
             case TRANSPORT:
                 System.out.print("Enter distance: ");
                 double distance = scanner.nextDouble();
-                scanner.nextLine(); // Consume the newline character
+                scanner.nextLine(); // Consume newline
                 System.out.print("Enter vehicle type: ");
                 String vehicleType = scanner.nextLine();
                 record = new Transport(startDate, endDate, amount, type, userId, distance, vehicleType);
@@ -215,20 +214,18 @@ public class Main {
             case LOGEMENT:
                 System.out.print("Enter energy consumption: ");
                 double energyConsumption = scanner.nextDouble();
-                scanner.nextLine(); // Consume the newline character
+                scanner.nextLine(); // Consume newline
                 System.out.print("Enter energy type: ");
                 String energyType = scanner.nextLine();
                 record = new Logement(startDate, endDate, amount, type, userId, energyConsumption, energyType);
                 break;
             case ALIMENTATION:
-                // Since ALIMENTATION type does not require extra fields, just create a new instance
                 record = new Alimentation(startDate, endDate, amount, type, userId);
                 break;
             default:
                 throw new IllegalArgumentException("Unknown type");
         }
 
-        // Add the carbon record using the CarbonRecordService
         carbonRecordService.createCarbonRecord(record);
         System.out.println("Carbon record added successfully!");
     }
