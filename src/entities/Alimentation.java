@@ -8,6 +8,7 @@ public class Alimentation extends CarbonRecord {
     private double foodConsumption;
     private String foodType;
 
+    
     // Constructor
     public Alimentation(LocalDate startDate, LocalDate endDate, BigDecimal amount, TypeConsommation type, int userId, double foodConsumption, String foodType) {
         super(startDate, endDate, amount, type, userId);
