@@ -34,8 +34,7 @@ public class Logement extends CarbonRecord {
 
     @Override
     public double calculateImpact() {
-        // Example calculation (this should be replaced with actual logic)
-        return energyConsumption * 0.15; // Assuming 0.15 is a conversion factor for impact
+        return energyConsumption * 0.15; // Replace with the actual formula for impact calculation
     }
 
     @Override

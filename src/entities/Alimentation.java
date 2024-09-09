@@ -10,14 +10,9 @@ public class Alimentation extends CarbonRecord {
 
     // Constructor
     public Alimentation(LocalDate startDate, LocalDate endDate, BigDecimal amount, TypeConsommation type, int userId, double foodConsumption, String foodType) {
-        super(startDate, endDate, amount, type, userId); // Call to the superclass constructor
+        super(startDate, endDate, amount, type, userId);
         this.foodConsumption = foodConsumption;
         this.foodType = foodType;
-        setUserId(userId); // Set userId using the setter from CarbonRecord
-    }
-
-    public Alimentation(LocalDate startDate, LocalDate endDate, BigDecimal amount, TypeConsommation type, int userId) {
-        super();
     }
 
     // Getters and setters
@@ -39,8 +34,7 @@ public class Alimentation extends CarbonRecord {
 
     @Override
     public double calculateImpact() {
-        // Example calculation (this should be replaced with actual logic)
-        return foodConsumption * 0.20; // Assuming 0.20 is a conversion factor for impact
+        return foodConsumption * 0.20; // Replace with the actual formula for impact calculation
     }
 
     @Override

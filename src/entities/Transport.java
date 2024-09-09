@@ -34,8 +34,7 @@ public class Transport extends CarbonRecord {
 
     @Override
     public double calculateImpact() {
-        // Example calculation (this should be replaced with actual logic)
-        return distance * 0.25; // Assuming 0.25 is a conversion factor for impact
+        return distance * 0.25; // Replace with the actual formula for impact calculation
     }
 
     @Override
