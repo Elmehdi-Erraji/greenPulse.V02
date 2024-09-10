@@ -62,10 +62,13 @@ public class Main {
             System.out.println("\n=== User Management Menu ===");
             System.out.println("1. Add User");
             System.out.println("2. View Users");
-            System.out.println("3. View Inactive User");
+            System.out.println("3. View Inactive Users");
             System.out.println("4. Update User");
             System.out.println("5. Delete User");
-            System.out.println("6. Go Back");
+            System.out.println("6. Calculate Average Carbon Consumption");
+            System.out.println("7. Sort Users by Carbon Consumption");
+            System.out.println("8. Filter Users by Carbon Consumption");
+            System.out.println("9. Go Back");
 
             int choice = getValidIntegerInput(scanner, "Enter your choice: ");
 
@@ -86,6 +89,15 @@ public class Main {
                     deleteUser(scanner);
                     break;
                 case 6:
+                    calculateAverageCarbonConsumption(scanner);
+                    break;
+                case 7:
+                    sortUsersByCarbonConsumption(scanner);
+                    break;
+                case 8:
+                    filterUsersByCarbonConsumption(scanner);
+                    break;
+                case 9:
                     return;
                 default:
                     System.out.println("Invalid choice. Please try again.");
@@ -135,37 +147,42 @@ public class Main {
     private static void viewUsers() throws SQLException {
         System.out.println("\n=== Users and their Carbon Records ===");
 
-        for (User user : userService.getAllUsers()) {
-            System.out.println("User ID: " + user.getId());
-            System.out.println("Name: " + user.getName());
-            System.out.println("Age: " + user.getAge());
+        List<User> users = userService.getAllUsers();
+        if (users.isEmpty()) {
+            System.out.println("No users found.");
+        } else {
+            for (User user : users) {
+                System.out.println("User ID: " + user.getId());
+                System.out.println("Name: " + user.getName());
+                System.out.println("Age: " + user.getAge());
 
-            List<CarbonRecord> carbonRecords = user.getCarbonRecords();
-            if (carbonRecords == null || carbonRecords.isEmpty()) {
-                System.out.println("No carbon records found for this user.");
-            } else {
-                System.out.println("Carbon Records:");
-                for (CarbonRecord record : carbonRecords) {
-                    if (record instanceof Alimentation) {
-                        Alimentation alimentation = (Alimentation) record;
-                        System.out.printf("Record ID: %d, Type: %s, Start Date: %s, End Date: %s, Amount: %s, Food Consumption: %.2f, Food Type: %s, Food Weight: %.2f\n",
-                                record.getId(), record.getType(), record.getStartDate(), record.getEndDate(), record.getAmount(),
-                                 alimentation.getFoodType(), alimentation.getFoodWeight());
-                    } else if (record instanceof Logement) {
-                        Logement logement = (Logement) record;
-                        System.out.printf("Record ID: %d, Type: %s, Start Date: %s, End Date: %s, Amount: %s, Energy Consumption: %.2f, Energy Type: %s\n",
-                                record.getId(), record.getType(), record.getStartDate(), record.getEndDate(), record.getAmount(),
-                                logement.getEnergyConsumption(), logement.getEnergyType());
-                    } else if (record instanceof Transport) {
-                        Transport transport = (Transport) record;
-                        System.out.printf("Record ID: %d, Type: %s, Start Date: %s, End Date: %s, Amount: %s, Distance: %.2f, Vehicle Type: %s\n",
-                                record.getId(), record.getType(), record.getStartDate(), record.getEndDate(), record.getAmount(),
-                                transport.getDistance(), transport.getVehicleType());
+                List<CarbonRecord> carbonRecords = user.getCarbonRecords();
+                if (carbonRecords == null || carbonRecords.isEmpty()) {
+                    System.out.println("No carbon records found for this user.");
+                } else {
+                    System.out.println("Carbon Records:");
+                    for (CarbonRecord record : carbonRecords) {
+                        if (record instanceof Alimentation) {
+                            Alimentation alimentation = (Alimentation) record;
+                            System.out.printf("Record ID: %d, Type: %s, Start Date: %s, End Date: %s, Amount: %.2f, Food Type: %s, Food Weight: %.2f, Impact Value: %.2f\n",
+                                    record.getId(), record.getType(), record.getStartDate(), record.getEndDate(), record.getAmount(),
+                                    alimentation.getFoodType(), alimentation.getFoodWeight(), alimentation.getImpactValue());
+                        } else if (record instanceof Logement) {
+                            Logement logement = (Logement) record;
+                            System.out.printf("Record ID: %d, Type: %s, Start Date: %s, End Date: %s, Amount: %.2f, Energy Consumption: %.2f, Energy Type: %s, Impact Value: %.2f\n",
+                                    record.getId(), record.getType(), record.getStartDate(), record.getEndDate(), record.getAmount(),
+                                    logement.getEnergyConsumption(), logement.getEnergyType(), logement.getImpactValue());
+                        } else if (record instanceof Transport) {
+                            Transport transport = (Transport) record;
+                            System.out.printf("Record ID: %d, Type: %s, Start Date: %s, End Date: %s, Amount: %.2f, Distance: %.2f, Vehicle Type: %s, Impact Value: %.2f\n",
+                                    record.getId(), record.getType(), record.getStartDate(), record.getEndDate(), record.getAmount(),
+                                    transport.getDistance(), transport.getVehicleType(), transport.getImpactValue());
+                        }
                     }
                 }
-            }
 
-            System.out.println("\n-----------------------------\n");
+                System.out.println("\n-----------------------------\n");
+            }
         }
     }
 
@@ -203,6 +220,49 @@ public class Main {
             }
         }
     }
+    private static void calculateAverageCarbonConsumption(Scanner scanner) throws SQLException {
+        System.out.println("Enter start date (yyyy-mm-dd): ");
+        LocalDate startDate = LocalDate.parse(scanner.nextLine());
+
+        System.out.println("Enter end date (yyyy-mm-dd): ");
+        LocalDate endDate = LocalDate.parse(scanner.nextLine());
+
+        double averageConsumption = userService.calculateAverageCarbonConsumption(startDate, endDate);
+        System.out.printf("Average Carbon Consumption from %s to %s is %.2f KgCO2eq\n", startDate, endDate, averageConsumption);
+    }
+    private static void sortUsersByCarbonConsumption(Scanner scanner) throws SQLException {
+        System.out.println("Enter start date (yyyy-mm-dd): ");
+        LocalDate startDate = LocalDate.parse(scanner.nextLine());
+
+        System.out.println("Enter end date (yyyy-mm-dd): ");
+        LocalDate endDate = LocalDate.parse(scanner.nextLine());
+
+        List<User> sortedUsers = userService.getUsersSortedByCarbonConsumption(startDate, endDate);
+
+        System.out.println("\nUsers sorted by carbon consumption:");
+        for (User user : sortedUsers) {
+            System.out.printf("User ID: %d, Name: %s, Total Consumption: %.2f KgCO2eq\n",
+                    user.getId(), user.getName(), user.getCarbonRecords().stream()
+                            .mapToDouble(record -> record.getAmount().doubleValue()) // Convert BigDecimal to double
+                            .sum());
+        }
+    }
+    private static void filterUsersByCarbonConsumption(Scanner scanner) throws SQLException {
+        System.out.println("Enter the consumption threshold (KgCO2eq): ");
+        double threshold = scanner.nextDouble();
+        scanner.nextLine(); // Consume newline
+
+        List<User> filteredUsers = userService.getUsersByCarbonConsumptionThreshold(threshold);
+
+        System.out.println("\nUsers with consumption exceeding " + threshold + " KgCO2eq:");
+        for (User user : filteredUsers) {
+            System.out.printf("User ID: %d, Name: %s, Total Consumption: %.2f KgCO2eq\n",
+                    user.getId(), user.getName(), user.getCarbonRecords().stream()
+                            .mapToDouble(record -> record.getAmount().doubleValue()) // Convert BigDecimal to double
+                            .sum());
+        }
+    }
+
 
     /*USER management ends here*/
 
@@ -382,7 +442,6 @@ public class Main {
 
         int recordId = getValidIntegerInput(scanner, "Enter the carbon record ID to delete: ");
 
-        // Confirm with the user before deleting
         System.out.println("Are you sure you want to delete record ID " + recordId + "? (yes/no): ");
         String confirmation = scanner.nextLine();
 
@@ -410,18 +469,19 @@ public class Main {
                 return;
             }
 
-            records.sort(Comparator.comparing(record -> (String) record.get("type")));
+            records.stream()
+                    .sorted(Comparator.comparing(record -> (String) record.get("type")))
+                    .forEach(record -> {
+                        int recordId = (Integer) record.get("id");
+                        LocalDate startDate = (LocalDate) record.get("start_date");
+                        LocalDate endDate = (LocalDate) record.get("end_date");
+                        BigDecimal amount = (BigDecimal) record.get("amount");
+                        String type = (String) record.get("type");
+                        BigDecimal impactValue = (BigDecimal) record.get("impact_value");
 
-            for (Map<String, Object> record : records) {
-                int recordId = (Integer) record.get("id");
-                LocalDate startDate = (LocalDate) record.get("start_date");
-                LocalDate endDate = (LocalDate) record.get("end_date");
-                BigDecimal amount = (BigDecimal) record.get("amount");
-                String type = (String) record.get("type");
-
-                System.out.printf("Record ID: %d, Type: %s, Start Date: %s, End Date: %s, Amount: %s\n",
-                        recordId, type, startDate, endDate, amount);
-            }
+                        System.out.printf("Record ID: %d, Type: %s, Start Date: %s, End Date: %s, Amount: %s, Impact Value: %s\n",
+                                recordId, type, startDate, endDate, amount, impactValue);
+                    });
         } catch (SQLException e) {
             System.out.println("Error retrieving carbon records: " + e.getMessage());
         }

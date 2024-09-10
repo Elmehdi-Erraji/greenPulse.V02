@@ -1,7 +1,10 @@
 package repository;
 
 import entities.*;
+import entities.enums.EnergyType;
+import entities.enums.FoodType;
 import entities.enums.TypeConsommation;
+import entities.enums.VehicleType;
 
 import java.math.BigDecimal;
 import java.sql.*;
@@ -170,7 +173,7 @@ public class CarbonRecordRepository {
     }
 
     public List<Map<String, Object>> findAllByUserId(int userId) throws SQLException {
-        String sql = "SELECT * FROM carbonrecords WHERE user_id = ?";
+        String sql = "SELECT id, start_date, end_date, amount, type, impact_value FROM carbonrecords WHERE user_id = ?";
         List<Map<String, Object>> recordsList = new ArrayList<>();
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
@@ -183,6 +186,7 @@ public class CarbonRecordRepository {
                     recordMap.put("end_date", rs.getDate("end_date").toLocalDate());
                     recordMap.put("amount", rs.getBigDecimal("amount"));
                     recordMap.put("type", rs.getString("type"));
+                    recordMap.put("impact_value", rs.getBigDecimal("impact_value"));
 
                     recordsList.add(recordMap);
                 }
@@ -190,4 +194,5 @@ public class CarbonRecordRepository {
         }
 
         return recordsList;
-    }}
+    }
+}

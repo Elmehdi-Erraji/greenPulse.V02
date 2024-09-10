@@ -128,7 +128,6 @@ public class UserRepository {
     }
 
 
-
     public void updateUser(User user) throws SQLException {
         String sql = "UPDATE users SET name = ?, age = ? WHERE id = ?";
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -190,64 +189,63 @@ public class UserRepository {
 
 
 
-    public Map<Integer, User> getAllUsersWithDetails() throws SQLException {
-        Map<Integer, User> userMap = new HashMap<>();
-        String sql = "SELECT u.id, u.name, u.age, cr.start_date, cr.end_date, cr.amount, cr.type, " +
-                "t.distance_parcourue, t.type_de_vehicule, " +
-                "l.consommation_energie, l.type_energie, " +
-                "a.type_aliment, a.poids " +
+    public List<User> getAllUsersWithDetails(LocalDate startDate, LocalDate endDate) throws SQLException {
+        List<User> users = new ArrayList<>();
+        String sql = "SELECT u.id, u.name, u.age, cr.id AS record_id, cr.impact_value " +
                 "FROM users u " +
                 "LEFT JOIN carbonrecords cr ON u.id = cr.user_id " +
-                "LEFT JOIN transports t ON cr.id = t.record_id " +
-                "LEFT JOIN logements l ON cr.id = l.record_id " +
-                "LEFT JOIN alimentations a ON cr.id = a.record_id";
+                "WHERE cr.start_date >= ? AND cr.end_date <= ?";
 
-        try (PreparedStatement statement = connection.prepareStatement(sql);
-             ResultSet resultSet = statement.executeQuery()) {
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setDate(1, java.sql.Date.valueOf(startDate));
+            statement.setDate(2, java.sql.Date.valueOf(endDate));
 
-            while (resultSet.next()) {
-                int userId = resultSet.getInt("id");
-                String name = resultSet.getString("name");
-                int age = resultSet.getInt("age");
+            try (ResultSet resultSet = statement.executeQuery()) {
+                while (resultSet.next()) {
+                    int userId = resultSet.getInt("id");
+                    String name = resultSet.getString("name");
+                    int age = resultSet.getInt("age");
+                    double impactValue = resultSet.getDouble("impact_value");
 
-                User user = userMap.computeIfAbsent(userId, key -> new User(key, name, age));
+                    User user = users.stream()
+                            .filter(u -> u.getId() == userId)
+                            .findFirst()
+                            .orElseGet(() -> {
+                                User newUser = new User(userId, name, age);
+                                users.add(newUser);
+                                return newUser;
+                            });
 
-                LocalDate startDate = resultSet.getDate("start_date") != null ? resultSet.getDate("start_date").toLocalDate() : null;
-                LocalDate endDate = resultSet.getDate("end_date") != null ? resultSet.getDate("end_date").toLocalDate() : null;
-                BigDecimal amount = resultSet.getBigDecimal("amount");
-                TypeConsommation type = TypeConsommation.valueOf(resultSet.getString("type"));
-
-                if (startDate != null && endDate != null) {
-                    CarbonRecord record = null;
-
-                    if (resultSet.getDouble("distance_parcourue") > 0) {
-                        record = new Transport(startDate, endDate, amount, type, userId,
-                                resultSet.getDouble("distance_parcourue"),
-                                VehicleType.valueOf(resultSet.getString("type_de_vehicule")));
-                    } else if (resultSet.getDouble("consommation_energie") > 0) {
-                        record = new Logement(startDate, endDate, amount, type, userId,
-                                resultSet.getDouble("consommation_energie"),
-                                EnergyType.valueOf(resultSet.getString("type_energie")));
-                    } else if (resultSet.getDouble("poids") > 0) {
-                        record = new Alimentation(
-                                startDate,
-                                endDate,
-                                amount,
-                                type,
-                                userId,
-                                FoodType.valueOf(resultSet.getString("type_aliment")), // Correct order: FoodType first
-                                resultSet.getDouble("poids") // Then foodWeight
-                        );
-                    }
-
-                    if (record != null) {
-                        user.addCarbonRecord(record);
-                    }
+                    // Add the impact value to the user (assuming `User` class has a method to add impact records)
+                    user.addImpactValue(impactValue); // Adjust this line according to your `User` class
                 }
             }
         }
 
-        return userMap;
+        return users;
+    }
+    // Gets the total carbon impact for a user
+    public double getTotalImpactForUser(int userId, LocalDate startDate, LocalDate endDate) throws SQLException {
+        double totalImpact = 0.0;
+        String sql = "SELECT COALESCE(SUM(cr.impact_value), 0) AS total_impact " +
+                "FROM carbonrecords cr " +
+                "WHERE cr.user_id = ? AND cr.start_date >= ? AND cr.end_date <= ?";
+
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, userId);
+            statement.setDate(2, java.sql.Date.valueOf(startDate));
+            statement.setDate(3, java.sql.Date.valueOf(endDate));
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    totalImpact = resultSet.getDouble("total_impact");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace(); // Handle the exception
+        }
+
+        return totalImpact;
     }
 
 }
