@@ -181,5 +181,58 @@ public class UserRepository {
     }
 
 
+    public Map<Integer, User> getAllUsersWithDetails() throws SQLException {
+        Map<Integer, User> userMap = new HashMap<>();
+        String sql = "SELECT u.id, u.name, u.age, cr.start_date, cr.end_date, cr.amount, cr.type, " +
+                "t.distance_parcourue, t.type_de_vehicule, " +
+                "l.consommation_energie, l.type_energie, " +
+                "a.type_aliment, a.poids " +
+                "FROM users u " +
+                "LEFT JOIN carbonrecords cr ON u.id = cr.user_id " +
+                "LEFT JOIN transports t ON cr.id = t.record_id " +
+                "LEFT JOIN logements l ON cr.id = l.record_id " +
+                "LEFT JOIN alimentations a ON cr.id = a.record_id";
 
+        try (PreparedStatement statement = connection.prepareStatement(sql);
+             ResultSet resultSet = statement.executeQuery()) {
+
+            while (resultSet.next()) {
+                int userId = resultSet.getInt("id");
+                String name = resultSet.getString("name");
+                int age = resultSet.getInt("age");
+
+                User user = userMap.computeIfAbsent(userId, key -> new User(key, name, age));
+
+                LocalDate startDate = resultSet.getDate("start_date") != null ? resultSet.getDate("start_date").toLocalDate() : null;
+                LocalDate endDate = resultSet.getDate("end_date") != null ? resultSet.getDate("end_date").toLocalDate() : null;
+                BigDecimal amount = resultSet.getBigDecimal("amount");
+                TypeConsommation type = TypeConsommation.valueOf(resultSet.getString("type"));
+
+                if (startDate != null && endDate != null) {
+                    CarbonRecord record = null;
+
+                    if (resultSet.getDouble("distance_parcourue") > 0) {
+                        record = new Transport(startDate, endDate, amount, type, userId,
+                                resultSet.getDouble("distance_parcourue"),
+                                VehicleType.valueOf(resultSet.getString("type_de_vehicule")));
+                    } else if (resultSet.getDouble("consommation_energie") > 0) {
+                        record = new Logement(startDate, endDate, amount, type, userId,
+                                resultSet.getDouble("consommation_energie"),
+                                EnergyType.valueOf(resultSet.getString("type_energie")));
+                    } else if (resultSet.getDouble("poids") > 0) {
+                        record = new Alimentation(startDate, endDate, amount, type, userId,
+                                resultSet.getDouble("poids"),
+                                FoodType.valueOf(resultSet.getString("type_aliment")),
+                                resultSet.getDouble("poids"));
+                    }
+
+                    if (record != null) {
+                        user.addCarbonRecord(record);
+                    }
+                }
+            }
+        }
+
+        return userMap;
+    }
 }

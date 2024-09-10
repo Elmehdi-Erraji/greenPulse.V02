@@ -1,5 +1,6 @@
 package services;
 
+import entities.CarbonRecord;
 import entities.User;
 import repository.UserRepository;
 
@@ -7,7 +8,9 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class UserService {
     private UserRepository userRepository;
@@ -60,7 +63,19 @@ public class UserService {
         return userRepository.isUserExist(userId);
     }
 
-    public Set<User> getInactiveUsers(LocalDate startDate, LocalDate endDate) throws SQLException {
-        return userRepository.getInactiveUsers(startDate, endDate);
+    public UserService(UserRepository userRepository) {
+        this.userRepository = userRepository;
     }
+
+    public Set<User> getInactiveUsers(LocalDate startDate, LocalDate endDate) throws SQLException {
+        Map<Integer, User> userMap = userRepository.getAllUsersWithDetails();
+
+        return userMap.values().stream()
+                .filter(user -> user.getCarbonRecords().stream().noneMatch(record ->
+                        !(record.getEndDate().isBefore(startDate) || record.getStartDate().isAfter(endDate))
+                ))
+                .collect(Collectors.toSet());
+    }
+
+
 }
