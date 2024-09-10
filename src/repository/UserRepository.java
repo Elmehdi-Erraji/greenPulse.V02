@@ -54,6 +54,7 @@ public class UserRepository {
         return null;
     }
 
+
     public List<User> getAllUsers() throws SQLException {
         List<User> users = new ArrayList<>();
         String userSql = "SELECT * FROM users";
@@ -82,43 +83,50 @@ public class UserRepository {
                     consumptionStatement.setInt(1, userId);
                     try (ResultSet consumptionResultSet = consumptionStatement.executeQuery()) {
                         while (consumptionResultSet.next()) {
-                            int recordId = consumptionResultSet.getInt("record_id");
-                            LocalDate startDate = consumptionResultSet.getDate("start_date").toLocalDate();
-                            LocalDate endDate = consumptionResultSet.getDate("end_date").toLocalDate();
+                            LocalDate startDate = consumptionResultSet.getDate("start_date") != null ?
+                                    consumptionResultSet.getDate("start_date").toLocalDate() : null;
+                            LocalDate endDate = consumptionResultSet.getDate("end_date") != null ?
+                                    consumptionResultSet.getDate("end_date").toLocalDate() : null;
                             BigDecimal amount = consumptionResultSet.getBigDecimal("amount");
-                            String type = consumptionResultSet.getString("type");
+                            TypeConsommation type = TypeConsommation.valueOf(consumptionResultSet.getString("type"));
 
-                            // Determine type and create appropriate CarbonRecord subclass
-                            CarbonRecord record;
+                            CarbonRecord record = null;
                             if (consumptionResultSet.getDouble("distance_parcourue") > 0) {
-                                record = new Transport(startDate, endDate, amount, TypeConsommation.valueOf(type), userId,
+                                record = new Transport(
+                                        startDate, endDate, amount, type, userId,
                                         consumptionResultSet.getDouble("distance_parcourue"),
-                                        VehicleType.valueOf(consumptionResultSet.getString("type_de_vehicule")));
+                                        VehicleType.valueOf(consumptionResultSet.getString("type_de_vehicule"))
+                                );
                             } else if (consumptionResultSet.getDouble("consommation_energie") > 0) {
-                                record = new Logement(startDate, endDate, amount, TypeConsommation.valueOf(type), userId,
+                                record = new Logement(
+                                        startDate, endDate, amount, type, userId,
                                         consumptionResultSet.getDouble("consommation_energie"),
-                                        EnergyType.valueOf(consumptionResultSet.getString("type_energie")));
-                            } else {
-                                record = new Alimentation(startDate, endDate, amount, TypeConsommation.valueOf(type), userId,
-                                        consumptionResultSet.getDouble("poids"),
+                                        EnergyType.valueOf(consumptionResultSet.getString("type_energie"))
+                                );
+                            } else if (consumptionResultSet.getDouble("poids") > 0) {
+                                record = new Alimentation(
+                                        startDate, endDate, amount, type, userId,
                                         FoodType.valueOf(consumptionResultSet.getString("type_aliment")),
-                                        consumptionResultSet.getDouble("poids"));
+                                        consumptionResultSet.getDouble("poids")
+                                );
                             }
-                            carbonRecords.add(record);
+
+                            if (record != null) {
+                                carbonRecords.add(record);
+                            }
                         }
                     }
                 }
 
-                // Set sorted carbon records in the user
                 user.setCarbonRecords(carbonRecords);
 
-                // Add the user to the list
                 users.add(user);
             }
         }
 
         return users;
     }
+
 
 
     public void updateUser(User user) throws SQLException {
@@ -181,6 +189,7 @@ public class UserRepository {
     }
 
 
+
     public Map<Integer, User> getAllUsersWithDetails() throws SQLException {
         Map<Integer, User> userMap = new HashMap<>();
         String sql = "SELECT u.id, u.name, u.age, cr.start_date, cr.end_date, cr.amount, cr.type, " +
@@ -220,10 +229,15 @@ public class UserRepository {
                                 resultSet.getDouble("consommation_energie"),
                                 EnergyType.valueOf(resultSet.getString("type_energie")));
                     } else if (resultSet.getDouble("poids") > 0) {
-                        record = new Alimentation(startDate, endDate, amount, type, userId,
-                                resultSet.getDouble("poids"),
-                                FoodType.valueOf(resultSet.getString("type_aliment")),
-                                resultSet.getDouble("poids"));
+                        record = new Alimentation(
+                                startDate,
+                                endDate,
+                                amount,
+                                type,
+                                userId,
+                                FoodType.valueOf(resultSet.getString("type_aliment")), // Correct order: FoodType first
+                                resultSet.getDouble("poids") // Then foodWeight
+                        );
                     }
 
                     if (record != null) {
@@ -235,4 +249,5 @@ public class UserRepository {
 
         return userMap;
     }
+
 }

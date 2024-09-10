@@ -2,7 +2,6 @@ package entities;
 
 import entities.enums.EnergyType;
 import entities.enums.TypeConsommation;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
@@ -14,6 +13,7 @@ public class Logement extends CarbonRecord {
         super(startDate, endDate, amount, type, userId);
         this.energyConsumption = energyConsumption;
         this.energyType = energyType;
+        this.impactValue = calculateImpact(); // Directly set impactValue
     }
 
     public double getEnergyConsumption() {
@@ -22,6 +22,7 @@ public class Logement extends CarbonRecord {
 
     public void setEnergyConsumption(double energyConsumption) {
         this.energyConsumption = energyConsumption;
+        this.impactValue = calculateImpact(); // Update impactValue directly
     }
 
     public EnergyType getEnergyType() {
@@ -30,31 +31,29 @@ public class Logement extends CarbonRecord {
 
     public void setEnergyType(EnergyType energyType) {
         this.energyType = energyType;
+        this.impactValue = calculateImpact(); // Update impactValue directly
     }
 
     @Override
     public double calculateImpact() {
         double factor = getImpactFactorByEnergyType(energyType);
-        return energyConsumption * factor; // Replace with actual formula
+        return energyConsumption * factor;
     }
 
     private double getImpactFactorByEnergyType(EnergyType type) {
         switch (type) {
             case ELECTRICITY:
-                return 0.20;
+                return 1.5;
             case GAS:
-                return 0.25;
-            case SOLAR:
-                return 0.05;
-            case WIND:
-                return 0.01;
+                return 2.0;
             default:
-                return 0.15; // Default impact factor
+                return 1.0;
         }
     }
 
     @Override
     public String toString() {
-        return String.format("Logement [energyConsumption=%.2f, energyType=%s, %s]", energyConsumption, energyType, super.toString());
+        return String.format("Logement [energyConsumption=%.2f, energyType=%s, impactValue=%.2f, %s]",
+                energyConsumption, energyType, impactValue, super.toString());
     }
 }

@@ -12,7 +12,8 @@ public class Transport extends CarbonRecord {
     public Transport(LocalDate startDate, LocalDate endDate, BigDecimal amount, TypeConsommation type, int userId, double distance, VehicleType vehicleType) {
         super(startDate, endDate, amount, type, userId);
         this.distance = distance;
-        this.vehicleType = vehicleType; // Directly set as VehicleType
+        this.vehicleType = vehicleType;
+        this.impactValue = calculateImpact(); // Directly set impactValue
     }
 
     public double getDistance() {
@@ -21,6 +22,7 @@ public class Transport extends CarbonRecord {
 
     public void setDistance(double distance) {
         this.distance = distance;
+        this.impactValue = calculateImpact(); // Update impactValue directly
     }
 
     public VehicleType getVehicleType() {
@@ -29,15 +31,28 @@ public class Transport extends CarbonRecord {
 
     public void setVehicleType(VehicleType vehicleType) {
         this.vehicleType = vehicleType;
+        this.impactValue = calculateImpact(); // Update impactValue directly
     }
 
     @Override
     public double calculateImpact() {
-        return distance * 0.25; // Adjust this calculation as needed
+        return distance * getImpactFactorByVehicleType(vehicleType);
+    }
+
+    private double getImpactFactorByVehicleType(VehicleType vehicleType) {
+        switch (vehicleType) {
+            case CAR:
+                return 0.5;
+            case TRAIN:
+                return 0.1;
+            default:
+                return 1.0;
+        }
     }
 
     @Override
     public String toString() {
-        return String.format("Transport [distance=%.2f, vehicleType=%s, %s]", distance, vehicleType, super.toString());
+        return String.format("Transport [distance=%.2f, vehicleType=%s, impactValue=%.2f, %s]",
+                distance, vehicleType, impactValue, super.toString());
     }
 }

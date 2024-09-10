@@ -58,7 +58,7 @@ public class CarbonRecordService {
             carbonRecordRepository.addAlimentationRecord(alimentation);
         } catch (SQLException e) {
             System.err.println("Error adding alimentation record: " + e.getMessage());
-            throw e; // rethrow to handle it at a higher level if necessary
+            throw e;
         }
     }
 
@@ -71,13 +71,14 @@ public class CarbonRecordService {
             carbonRecordRepository.deleteCarbonRecord(recordId);
         } catch (SQLException e) {
             System.err.println("Error deleting carbon record with ID " + recordId + ": " + e.getMessage());
-            throw e; // rethrow to handle it at a higher level if necessary
+            throw e;
         }
     }
 
     public List<Map<String, Object>> getAllRecordsByUserId(int userId) throws SQLException {
         return carbonRecordRepository.findAllByUserId(userId);
     }
+
     private void validateLogement(Logement logement) {
         if (logement.getStartDate() == null || logement.getEndDate() == null) {
             throw new IllegalArgumentException("Logement dates cannot be null.");
@@ -108,9 +109,6 @@ public class CarbonRecordService {
         }
         if (alimentation.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("Alimentation amount must be greater than zero.");
-        }
-        if (alimentation.getFoodConsumption() <= 0) {
-            throw new IllegalArgumentException("Alimentation food consumption must be greater than zero.");
         }
         if (alimentation.getFoodWeight() <= 0) {
             throw new IllegalArgumentException("Alimentation food weight must be greater than zero.");

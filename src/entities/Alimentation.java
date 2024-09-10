@@ -6,23 +6,14 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 public class Alimentation extends CarbonRecord {
-    private double foodConsumption;
     private FoodType foodType;
     private double foodWeight;
 
-
-    public Alimentation(LocalDate startDate, LocalDate endDate, BigDecimal amount, TypeConsommation type, int userId, double foodConsumption, FoodType foodType, double foodWeight) {
+    public Alimentation(LocalDate startDate, LocalDate endDate, BigDecimal amount, TypeConsommation type, int userId, FoodType foodType, double foodWeight) {
         super(startDate, endDate, amount, type, userId);
         this.foodType = foodType;
-        this.foodWeight = foodWeight; // Set foodWeight properly
-    }
-
-    public double getFoodConsumption() {
-        return foodConsumption;
-    }
-
-    public void setFoodConsumption(double foodConsumption) {
-        this.foodConsumption = foodConsumption;
+        this.foodWeight = foodWeight;
+        this.impactValue = calculateImpact(); // Directly set impactValue
     }
 
     public FoodType getFoodType() {
@@ -31,6 +22,7 @@ public class Alimentation extends CarbonRecord {
 
     public void setFoodType(FoodType foodType) {
         this.foodType = foodType;
+        this.impactValue = calculateImpact(); // Update impactValue directly
     }
 
     public double getFoodWeight() {
@@ -39,15 +31,28 @@ public class Alimentation extends CarbonRecord {
 
     public void setFoodWeight(double foodWeight) {
         this.foodWeight = foodWeight;
+        this.impactValue = calculateImpact(); // Update impactValue directly
     }
 
     @Override
     public double calculateImpact() {
-        return foodConsumption * 0.20; // You can adjust this formula as per your requirement
+        return foodWeight * getImpactFactorByFoodType(foodType);
+    }
+
+    private double getImpactFactorByFoodType(FoodType type) {
+        switch (type) {
+            case MEAT:
+                return 5.0;
+            case VEGETABLES:
+                return 0.5;
+            default:
+                return 1.0;
+        }
     }
 
     @Override
     public String toString() {
-        return String.format("Alimentation [foodConsumption=%.2f, foodType=%s, foodWeight=%.2f, %s]", foodConsumption, foodType, foodWeight, super.toString());
+        return String.format("Alimentation [foodType=%s, foodWeight=%.2f, impactValue=%.2f, %s]",
+                foodType, foodWeight, impactValue, super.toString());
     }
 }

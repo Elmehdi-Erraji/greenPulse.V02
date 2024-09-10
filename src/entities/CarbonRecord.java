@@ -5,21 +5,30 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 public abstract class CarbonRecord {
-    private int id;
-    private LocalDate startDate;
-    private LocalDate endDate;
-    private BigDecimal amount;
-    private TypeConsommation type;
-    private int userId;
+    protected int id;
+    protected LocalDate startDate;
+    protected LocalDate endDate;
+    protected BigDecimal amount;
+    protected TypeConsommation type;
+    protected int userId;
+    protected double impactValue;
 
-    public CarbonRecord(LocalDate startDate, LocalDate endDate, BigDecimal amount, TypeConsommation type, int userId) {
+    // Constructor with impactValue as double
+    public CarbonRecord(LocalDate startDate, LocalDate endDate, BigDecimal amount, TypeConsommation type, int userId, double impactValue) {
         this.startDate = startDate;
         this.endDate = endDate;
         this.amount = amount;
         this.type = type;
         this.userId = userId;
+        this.impactValue = impactValue;
     }
 
+    // Constructor with default impactValue
+    public CarbonRecord(LocalDate startDate, LocalDate endDate, BigDecimal amount, TypeConsommation type, int userId) {
+        this(startDate, endDate, amount, type, userId, 0.0); // Default impactValue
+    }
+
+    // Default constructor
     public CarbonRecord() {}
 
     public int getId() {
@@ -70,11 +79,21 @@ public abstract class CarbonRecord {
         this.userId = userId;
     }
 
+    public double getImpactValue() {
+        return impactValue;
+    }
+
+    public void setImpactValue(double impactValue) {
+        this.impactValue = impactValue;
+    }
+
     @Override
     public String toString() {
-        return String.format("CarbonRecord [id=%d, startDate=%s, endDate=%s, amount=%s, type=%s, userId=%d]",
-                id, startDate, endDate, amount, type, userId);
+        return String.format("CarbonRecord [id=%d, startDate=%s, endDate=%s, amount=%s, type=%s, userId=%d, impactValue=%.2f]",
+                id, startDate, endDate, amount, type, userId, impactValue);
     }
 
     public abstract double calculateImpact();
+
+
 }

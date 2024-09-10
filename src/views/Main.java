@@ -120,7 +120,7 @@ public class Main {
             }
         }
     }
-
+/*USER management starts here*/
     private static void addUser(Scanner scanner) throws SQLException {
         System.out.print("Enter user name: ");
         String name = scanner.nextLine();
@@ -150,7 +150,7 @@ public class Main {
                         Alimentation alimentation = (Alimentation) record;
                         System.out.printf("Record ID: %d, Type: %s, Start Date: %s, End Date: %s, Amount: %s, Food Consumption: %.2f, Food Type: %s, Food Weight: %.2f\n",
                                 record.getId(), record.getType(), record.getStartDate(), record.getEndDate(), record.getAmount(),
-                                alimentation.getFoodConsumption(), alimentation.getFoodType(), alimentation.getFoodWeight());
+                                 alimentation.getFoodType(), alimentation.getFoodWeight());
                     } else if (record instanceof Logement) {
                         Logement logement = (Logement) record;
                         System.out.printf("Record ID: %d, Type: %s, Start Date: %s, End Date: %s, Amount: %s, Energy Consumption: %.2f, Energy Type: %s\n",
@@ -168,7 +168,6 @@ public class Main {
             System.out.println("\n-----------------------------\n");
         }
     }
-
 
     private static void updateUser(Scanner scanner) throws SQLException {
         int id = getValidIntegerInput(scanner, "Enter user ID to update: ");
@@ -188,6 +187,28 @@ public class Main {
         userService.deleteUser(id);
         System.out.println("User deleted successfully!");
     }
+
+    private static void viewInactiveUsers(Scanner scanner) throws SQLException {
+        System.out.println("\n=== View Inactive Users ===");
+        LocalDate startDate = getValidDateInput(scanner, "Enter start date (yyyy-MM-dd): ");
+        LocalDate endDate = getValidDateInput(scanner, "Enter end date (yyyy-MM-dd): ");
+
+        Set<User> inactiveUsers = userService.getInactiveUsers(startDate, endDate);
+
+        if (inactiveUsers.isEmpty()) {
+            System.out.println("No inactive users found.");
+        } else {
+            for (User user : inactiveUsers) {
+                System.out.printf("User [id=%d, name=%s]%n", user.getId(), user.getName());
+            }
+        }
+    }
+
+    /*USER management ends here*/
+
+
+    /*CARBON management starts here*/
+
 
     private static void addCarbonRecord(Scanner scanner) throws SQLException {
         int userId = getValidIntegerInput(scanner, "Enter user ID: ");
@@ -244,11 +265,10 @@ public class Main {
         LocalDate startDate = getValidDateInput(scanner, "Enter start date (yyyy-MM-dd): ");
         LocalDate endDate = getValidDateInput(scanner, "Enter end date (yyyy-MM-dd): ");
         BigDecimal amount = getValidBigDecimalInput(scanner, "Enter amount: ");
-        double foodConsumption = getValidDoubleInput(scanner, "Enter food consumption: ");
         double foodWeight = getValidDoubleInput(scanner, "Enter food weight: ");
         FoodType foodType = getFoodTypeFromInput(scanner);
 
-        Alimentation alimentation = new Alimentation(startDate, endDate, amount, TypeConsommation.ALIMENTATION, userId, foodConsumption, foodType, foodWeight);
+        Alimentation alimentation = new Alimentation(startDate, endDate, amount, TypeConsommation.ALIMENTATION, userId, foodType, foodWeight);
         carbonRecordService.addAlimentationRecord(alimentation);
         System.out.println("Alimentation carbon record added successfully!");
     }
@@ -407,19 +427,6 @@ public class Main {
         }
     }
 
-    private static void viewInactiveUsers(Scanner scanner) throws SQLException {
-        System.out.println("\n=== View Inactive Users ===");
-        LocalDate startDate = getValidDateInput(scanner, "Enter start date (yyyy-MM-dd): ");
-        LocalDate endDate = getValidDateInput(scanner, "Enter end date (yyyy-MM-dd): ");
+    /*CARBON management ends here*/
 
-        Set<User> inactiveUsers = userService.getInactiveUsers(startDate, endDate);
-
-        if (inactiveUsers.isEmpty()) {
-            System.out.println("No inactive users found.");
-        } else {
-            for (User user : inactiveUsers) {
-                System.out.printf("User [id=%d, name=%s]%n", user.getId(), user.getName());
-            }
-        }
-    }
 }
