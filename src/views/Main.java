@@ -15,10 +15,8 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
-import java.util.Comparator;
-import java.util.Map;
-import java.util.Scanner;
-import java.util.List;
+import java.util.*;
+
 public class Main {
 
     private static UserService userService;
@@ -64,9 +62,10 @@ public class Main {
             System.out.println("\n=== User Management Menu ===");
             System.out.println("1. Add User");
             System.out.println("2. View Users");
-            System.out.println("3. Update User");
-            System.out.println("4. Delete User");
-            System.out.println("5. Go Back");
+            System.out.println("3. View Inactive User");
+            System.out.println("4. Update User");
+            System.out.println("5. Delete User");
+            System.out.println("6. Go Back");
 
             int choice = getValidIntegerInput(scanner, "Enter your choice: ");
 
@@ -78,12 +77,15 @@ public class Main {
                     viewUsers();
                     break;
                 case 3:
-                    updateUser(scanner);
+                    viewInactiveUsers(scanner);
                     break;
                 case 4:
-                    deleteUser(scanner);
+                    updateUser(scanner);
                     break;
                 case 5:
+                    deleteUser(scanner);
+                    break;
+                case 6:
                     return;
                 default:
                     System.out.println("Invalid choice. Please try again.");
@@ -131,11 +133,42 @@ public class Main {
     }
 
     private static void viewUsers() throws SQLException {
-        System.out.println("\n=== Users ===");
+        System.out.println("\n=== Users and their Carbon Records ===");
+
         for (User user : userService.getAllUsers()) {
-            System.out.println(user);
+            System.out.println("User ID: " + user.getId());
+            System.out.println("Name: " + user.getName());
+            System.out.println("Age: " + user.getAge());
+
+            List<CarbonRecord> carbonRecords = user.getCarbonRecords();
+            if (carbonRecords == null || carbonRecords.isEmpty()) {
+                System.out.println("No carbon records found for this user.");
+            } else {
+                System.out.println("Carbon Records:");
+                for (CarbonRecord record : carbonRecords) {
+                    if (record instanceof Alimentation) {
+                        Alimentation alimentation = (Alimentation) record;
+                        System.out.printf("Record ID: %d, Type: %s, Start Date: %s, End Date: %s, Amount: %s, Food Consumption: %.2f, Food Type: %s, Food Weight: %.2f\n",
+                                record.getId(), record.getType(), record.getStartDate(), record.getEndDate(), record.getAmount(),
+                                alimentation.getFoodConsumption(), alimentation.getFoodType(), alimentation.getFoodWeight());
+                    } else if (record instanceof Logement) {
+                        Logement logement = (Logement) record;
+                        System.out.printf("Record ID: %d, Type: %s, Start Date: %s, End Date: %s, Amount: %s, Energy Consumption: %.2f, Energy Type: %s\n",
+                                record.getId(), record.getType(), record.getStartDate(), record.getEndDate(), record.getAmount(),
+                                logement.getEnergyConsumption(), logement.getEnergyType());
+                    } else if (record instanceof Transport) {
+                        Transport transport = (Transport) record;
+                        System.out.printf("Record ID: %d, Type: %s, Start Date: %s, End Date: %s, Amount: %s, Distance: %.2f, Vehicle Type: %s\n",
+                                record.getId(), record.getType(), record.getStartDate(), record.getEndDate(), record.getAmount(),
+                                transport.getDistance(), transport.getVehicleType());
+                    }
+                }
+            }
+
+            System.out.println("\n-----------------------------\n");
         }
     }
+
 
     private static void updateUser(Scanner scanner) throws SQLException {
         int id = getValidIntegerInput(scanner, "Enter user ID to update: ");
@@ -357,7 +390,6 @@ public class Main {
                 return;
             }
 
-            // Sort records based on the 'type'
             records.sort(Comparator.comparing(record -> (String) record.get("type")));
 
             for (Map<String, Object> record : records) {
@@ -372,6 +404,22 @@ public class Main {
             }
         } catch (SQLException e) {
             System.out.println("Error retrieving carbon records: " + e.getMessage());
+        }
+    }
+
+    private static void viewInactiveUsers(Scanner scanner) throws SQLException {
+        System.out.println("\n=== View Inactive Users ===");
+        LocalDate startDate = getValidDateInput(scanner, "Enter start date (yyyy-MM-dd): ");
+        LocalDate endDate = getValidDateInput(scanner, "Enter end date (yyyy-MM-dd): ");
+
+        Set<User> inactiveUsers = userService.getInactiveUsers(startDate, endDate);
+
+        if (inactiveUsers.isEmpty()) {
+            System.out.println("No inactive users found.");
+        } else {
+            for (User user : inactiveUsers) {
+                System.out.printf("User [id=%d, name=%s]%n", user.getId(), user.getName());
+            }
         }
     }
 }

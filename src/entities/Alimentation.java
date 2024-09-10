@@ -13,7 +13,6 @@ public class Alimentation extends CarbonRecord {
 
     public Alimentation(LocalDate startDate, LocalDate endDate, BigDecimal amount, TypeConsommation type, int userId, double foodConsumption, FoodType foodType, double foodWeight) {
         super(startDate, endDate, amount, type, userId);
-        this.foodConsumption = foodConsumption;
         this.foodType = foodType;
         this.foodWeight = foodWeight; // Set foodWeight properly
     }

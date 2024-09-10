@@ -67,7 +67,7 @@ public class User {
 
     @Override
     public String toString() {
-        return String.format("User [id=%d, name=%s, age=%d, carbonRecords=%s]", id, name, age, carbonRecords);
+        return "User [id=" + id + ", name=" + name + "]";
     }
 
     public void addCarbonRecord(CarbonRecord record) {

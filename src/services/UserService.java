@@ -5,7 +5,9 @@ import repository.UserRepository;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 
 public class UserService {
     private UserRepository userRepository;
@@ -56,5 +58,9 @@ public class UserService {
             throw new IllegalArgumentException("Invalid user ID");
         }
         return userRepository.isUserExist(userId);
+    }
+
+    public Set<User> getInactiveUsers(LocalDate startDate, LocalDate endDate) throws SQLException {
+        return userRepository.getInactiveUsers(startDate, endDate);
     }
 }
