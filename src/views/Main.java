@@ -350,7 +350,10 @@ public class Main {
 
         try {
             ResultSet records = carbonRecordService.getAllRecordsByUserId(userId);
-
+            if (records == null) {
+                System.out.println("No carbon records found for this user.");
+                return;
+            }
             if (!records.isBeforeFirst()) {
                 System.out.println("No carbon records found for this user.");
                 return;

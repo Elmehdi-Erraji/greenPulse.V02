@@ -105,7 +105,7 @@ public class CarbonRecordRepository {
                 "VALUES (?, ?, ?)";
 
         try {
-            connection.setAutoCommit(false); // Begin transaction
+            connection.setAutoCommit(false);
             try (PreparedStatement insertCarbonRecordStmt = connection.prepareStatement(insertCarbonRecordSql)) {
                 insertCarbonRecordStmt.setDate(1, Date.valueOf(alimentation.getStartDate()));
                 insertCarbonRecordStmt.setDate(2, Date.valueOf(alimentation.getEndDate()));
@@ -125,14 +125,13 @@ public class CarbonRecordRepository {
                     insertAlimentationStmt.setString(2, alimentation.getFoodType().name());
                     insertAlimentationStmt.setDouble(3, alimentation.getFoodWeight());
 
-
                     insertAlimentationStmt.executeUpdate();
                 }
             }
 
-            connection.commit(); // Commit transaction
+            connection.commit();
         } catch (SQLException e) {
-            connection.rollback(); // Rollback transaction on error
+            connection.rollback();
             System.err.println("Error adding alimentation record: " + e.getMessage());
             throw e;
         } finally {
@@ -142,37 +141,24 @@ public class CarbonRecordRepository {
 
     public void deleteCarbonRecord(int recordId) throws SQLException {
         String deleteCarbonRecordSql = "DELETE FROM carbonrecords WHERE id = ?";
-        String deleteSpecificRecordSql = "DELETE FROM transports WHERE record_id = ? " +
-                "OR DELETE FROM logements WHERE record_id = ? " +
-                "OR DELETE FROM alimentations WHERE record_id = ?";
 
-        try {
-            connection.setAutoCommit(false); // Begin transaction
+        try (PreparedStatement deleteCarbonRecordStmt = connection.prepareStatement(deleteCarbonRecordSql)) {
+            deleteCarbonRecordStmt.setInt(1, recordId);
 
-            try (PreparedStatement deleteCarbonRecordStmt = connection.prepareStatement(deleteCarbonRecordSql)) {
-                deleteCarbonRecordStmt.setInt(1, recordId);
-                deleteCarbonRecordStmt.executeUpdate();
+            int rowsAffected = deleteCarbonRecordStmt.executeUpdate();
+            if (rowsAffected == 0) {
+                System.out.println("No carbon record found with ID " + recordId);
+            } else {
+                System.out.println("Carbon record with ID " + recordId + " deleted successfully.");
             }
-
-            try (PreparedStatement deleteSpecificRecordStmt = connection.prepareStatement(deleteSpecificRecordSql)) {
-                deleteSpecificRecordStmt.setInt(1, recordId);
-                deleteSpecificRecordStmt.setInt(2, recordId);
-                deleteSpecificRecordStmt.setInt(3, recordId);
-                deleteSpecificRecordStmt.executeUpdate();
-            }
-
-            connection.commit(); // Commit transaction
         } catch (SQLException e) {
-            connection.rollback(); // Rollback transaction on error
-            System.err.println("Error deleting carbon record with ID " + recordId + ": " + e.getMessage());
+            System.err.println("Error deleting carbon record: " + e.getMessage());
             throw e;
-        } finally {
-            connection.setAutoCommit(true); // Reset auto-commit mode
         }
     }
 
     public ResultSet getAllRecordsByUserId(int userId) throws SQLException {
-        String sql = "SELECT * FROM carbonrecords WHERE userId = ?";
+        String sql = "SELECT * FROM carbonrecords WHERE user_id = ?";
 
         PreparedStatement statement = connection.prepareStatement(sql);
         statement.setInt(1, userId);

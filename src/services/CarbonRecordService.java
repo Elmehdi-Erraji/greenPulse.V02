@@ -73,10 +73,11 @@ public class CarbonRecordService {
             carbonRecordRepository.deleteCarbonRecord(recordId);
         } catch (SQLException e) {
             System.err.println("Error deleting carbon record with ID " + recordId + ": " + e.getMessage());
-            throw e;
+            throw e; // rethrow to handle it at a higher level if necessary
         }
     }
 
+    // Fetch all carbon records for a user
     public ResultSet getAllRecordsByUserId(int userId) throws SQLException {
         if (userId <= 0) {
             throw new IllegalArgumentException("Invalid user ID.");
