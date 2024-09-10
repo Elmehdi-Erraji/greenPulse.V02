@@ -3,7 +3,6 @@ package repository;
 import entities.*;
 import entities.enums.TypeConsommation;
 
-import java.math.BigDecimal;
 import java.sql.*;
 
 public class CarbonRecordRepository {

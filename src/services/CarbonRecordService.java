@@ -15,7 +15,6 @@ public class CarbonRecordService {
         this.carbonRecordRepository = carbonRecordRepository;
     }
 
-    // Add Logement Record
     public void addLogementRecord(Logement logement) throws SQLException {
         if (logement == null) {
             throw new IllegalArgumentException("Logement record cannot be null.");
@@ -27,11 +26,10 @@ public class CarbonRecordService {
             carbonRecordRepository.addLogementRecord(logement);
         } catch (SQLException e) {
             System.err.println("Error adding logement record: " + e.getMessage());
-            throw e; // rethrow to handle it at a higher level if necessary
+            throw e;
         }
     }
 
-    // Add Transport Record
     public void addTransportRecord(Transport transport) throws SQLException {
         if (transport == null) {
             throw new IllegalArgumentException("Transport record cannot be null.");
@@ -43,11 +41,10 @@ public class CarbonRecordService {
             carbonRecordRepository.addTransportRecord(transport);
         } catch (SQLException e) {
             System.err.println("Error adding transport record: " + e.getMessage());
-            throw e; // rethrow to handle it at a higher level if necessary
+            throw e;
         }
     }
 
-    // Add Alimentation Record
     public void addAlimentationRecord(Alimentation alimentation) throws SQLException {
         if (alimentation == null) {
             throw new IllegalArgumentException("Alimentation record cannot be null.");
@@ -63,7 +60,6 @@ public class CarbonRecordService {
         }
     }
 
-    // Delete a carbon record
     public void deleteCarbonRecord(int recordId) throws SQLException {
         if (recordId <= 0) {
             throw new IllegalArgumentException("Invalid record ID.");
@@ -77,7 +73,6 @@ public class CarbonRecordService {
         }
     }
 
-    // Fetch all carbon records for a user
     public ResultSet getAllRecordsByUserId(int userId) throws SQLException {
         if (userId <= 0) {
             throw new IllegalArgumentException("Invalid user ID.");
@@ -87,12 +82,11 @@ public class CarbonRecordService {
             carbonRecordRepository.getAllRecordsByUserId(userId);
         } catch (SQLException e) {
             System.err.println("Error fetching records for user ID " + userId + ": " + e.getMessage());
-            throw e; // rethrow to handle it at a higher level if necessary
+            throw e;
         }
         return null;
     }
 
-    // Validate Logement record
     private void validateLogement(Logement logement) {
         if (logement.getStartDate() == null || logement.getEndDate() == null) {
             throw new IllegalArgumentException("Logement dates cannot be null.");
@@ -105,7 +99,6 @@ public class CarbonRecordService {
         }
     }
 
-    // Validate Transport record
     private void validateTransport(Transport transport) {
         if (transport.getStartDate() == null || transport.getEndDate() == null) {
             throw new IllegalArgumentException("Transport dates cannot be null.");
@@ -118,7 +111,6 @@ public class CarbonRecordService {
         }
     }
 
-    // Validate Alimentation record
     private void validateAlimentation(Alimentation alimentation) {
         if (alimentation.getStartDate() == null || alimentation.getEndDate() == null) {
             throw new IllegalArgumentException("Alimentation dates cannot be null.");

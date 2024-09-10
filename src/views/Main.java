@@ -322,7 +322,6 @@ public class Main {
         }
     }
 
-
     private static void deleteCarbonRecord(Scanner scanner) throws SQLException {
         System.out.println("\n=== Delete Carbon Record ===");
 
@@ -343,6 +342,7 @@ public class Main {
             System.out.println("Delete operation cancelled.");
         }
     }
+
     private static void viewCarbonRecords(Scanner scanner) throws SQLException {
         System.out.println("\n=== View Carbon Records ===");
 

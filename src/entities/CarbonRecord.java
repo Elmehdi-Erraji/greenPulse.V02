@@ -5,14 +5,13 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 public abstract class CarbonRecord {
-    private int id;  // Use long if id might exceed int
+    private int id;
     private LocalDate startDate;
     private LocalDate endDate;
     private BigDecimal amount;
     private TypeConsommation type;
     private int userId;
 
-    // Constructor with parameters
     public CarbonRecord(LocalDate startDate, LocalDate endDate, BigDecimal amount, TypeConsommation type, int userId) {
         this.startDate = startDate;
         this.endDate = endDate;
@@ -21,10 +20,8 @@ public abstract class CarbonRecord {
         this.userId = userId;
     }
 
-    // Default constructor
     public CarbonRecord() {}
 
-    // Getters and setters
     public int getId() {
         return id;
     }
@@ -79,6 +76,5 @@ public abstract class CarbonRecord {
                 id, startDate, endDate, amount, type, userId);
     }
 
-    // Abstract method for subclasses to implement
     public abstract double calculateImpact();
 }

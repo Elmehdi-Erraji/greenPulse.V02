@@ -8,9 +8,9 @@ import java.time.LocalDate;
 public class Alimentation extends CarbonRecord {
     private double foodConsumption;
     private FoodType foodType;
-    private double foodWeight; // Added for weight management
+    private double foodWeight;
 
-    // Constructor
+
     public Alimentation(LocalDate startDate, LocalDate endDate, BigDecimal amount, TypeConsommation type, int userId, double foodConsumption, FoodType foodType, double foodWeight) {
         super(startDate, endDate, amount, type, userId);
         this.foodConsumption = foodConsumption;
@@ -18,7 +18,6 @@ public class Alimentation extends CarbonRecord {
         this.foodWeight = foodWeight; // Set foodWeight properly
     }
 
-    // Getters and setters
     public double getFoodConsumption() {
         return foodConsumption;
     }
@@ -43,7 +42,6 @@ public class Alimentation extends CarbonRecord {
         this.foodWeight = foodWeight;
     }
 
-    // Override the impact calculation based on food consumption
     @Override
     public double calculateImpact() {
         return foodConsumption * 0.20; // You can adjust this formula as per your requirement

@@ -10,14 +10,12 @@ public class Logement extends CarbonRecord {
     private double energyConsumption;
     private EnergyType energyType;
 
-    // Constructor
     public Logement(LocalDate startDate, LocalDate endDate, BigDecimal amount, TypeConsommation type, int userId, double energyConsumption, EnergyType energyType) {
         super(startDate, endDate, amount, type, userId);
         this.energyConsumption = energyConsumption;
         this.energyType = energyType;
     }
 
-    // Getters and setters
     public double getEnergyConsumption() {
         return energyConsumption;
     }
@@ -34,7 +32,6 @@ public class Logement extends CarbonRecord {
         this.energyType = energyType;
     }
 
-    // Override method to calculate carbon impact
     @Override
     public double calculateImpact() {
         double factor = getImpactFactorByEnergyType(energyType);

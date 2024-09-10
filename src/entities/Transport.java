@@ -9,14 +9,12 @@ public class Transport extends CarbonRecord {
     private double distance;
     private VehicleType vehicleType;
 
-    // Constructor
     public Transport(LocalDate startDate, LocalDate endDate, BigDecimal amount, TypeConsommation type, int userId, double distance, VehicleType vehicleType) {
         super(startDate, endDate, amount, type, userId);
         this.distance = distance;
         this.vehicleType = vehicleType; // Directly set as VehicleType
     }
 
-    // Getters and setters
     public double getDistance() {
         return distance;
     }
