@@ -4,8 +4,8 @@ import entities.*;
 import repository.CarbonRecordRepository;
 
 import java.math.BigDecimal;
+import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Optional;
 
 public class CarbonRecordService {
 
@@ -73,12 +73,11 @@ public class CarbonRecordService {
             carbonRecordRepository.deleteCarbonRecord(recordId);
         } catch (SQLException e) {
             System.err.println("Error deleting carbon record with ID " + recordId + ": " + e.getMessage());
-            throw e; // rethrow to handle it at a higher level if necessary
+            throw e;
         }
     }
 
-    // Fetch all carbon records for a user
-    public void getAllRecordsByUserId(int userId) throws SQLException {
+    public ResultSet getAllRecordsByUserId(int userId) throws SQLException {
         if (userId <= 0) {
             throw new IllegalArgumentException("Invalid user ID.");
         }
@@ -89,6 +88,7 @@ public class CarbonRecordService {
             System.err.println("Error fetching records for user ID " + userId + ": " + e.getMessage());
             throw e; // rethrow to handle it at a higher level if necessary
         }
+        return null;
     }
 
     // Validate Logement record

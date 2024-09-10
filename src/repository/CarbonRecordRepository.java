@@ -14,22 +14,23 @@ public class CarbonRecordRepository {
         this.connection = connection;
     }
 
-    // Add Logement Carbon Record to DB
     public void addLogementRecord(Logement logement) throws SQLException {
-        String insertCarbonRecordSql = "INSERT INTO carbonrecords (userId, startDate, endDate, amount, typeConsommation) " +
+
+        String insertCarbonRecordSql = "INSERT INTO carbonrecords (start_date, end_date, amount, type,user_id) " +
                 "VALUES (?, ?, ?, ?, ?) RETURNING id";
         String insertLogementSql = "INSERT INTO logements (record_id, consommation_energie, type_energie) " +
                 "VALUES (?, ?, ?)";
 
         try {
-            connection.setAutoCommit(false); // Begin transaction
+            connection.setAutoCommit(false);
 
             try (PreparedStatement insertCarbonRecordStmt = connection.prepareStatement(insertCarbonRecordSql)) {
-                insertCarbonRecordStmt.setInt(1, logement.getUserId());
-                insertCarbonRecordStmt.setDate(2, Date.valueOf(logement.getStartDate()));
-                insertCarbonRecordStmt.setDate(3, Date.valueOf(logement.getEndDate()));
-                insertCarbonRecordStmt.setBigDecimal(4, logement.getAmount());
-                insertCarbonRecordStmt.setString(5, TypeConsommation.LOGEMENT.name());
+                insertCarbonRecordStmt.setDate(1, Date.valueOf(logement.getStartDate()));
+                insertCarbonRecordStmt.setDate(2, Date.valueOf(logement.getEndDate()));
+                insertCarbonRecordStmt.setBigDecimal(3, logement.getAmount());
+                insertCarbonRecordStmt.setString(4, TypeConsommation.LOGEMENT.name());
+                insertCarbonRecordStmt.setInt(5, logement.getUserId());
+
 
                 ResultSet generatedKeys = insertCarbonRecordStmt.executeQuery();
                 if (!generatedKeys.next()) {
@@ -45,20 +46,18 @@ public class CarbonRecordRepository {
                     insertLogementStmt.executeUpdate();
                 }
             }
-
-            connection.commit(); // Commit transaction
+            connection.commit();
         } catch (SQLException e) {
-            connection.rollback(); // Rollback transaction on error
+            connection.rollback();
             System.err.println("Error adding logement record: " + e.getMessage());
             throw e;
         } finally {
-            connection.setAutoCommit(true); // Reset auto-commit mode
+            connection.setAutoCommit(true);
         }
     }
 
-    // Add Transport Carbon Record to DB
     public void addTransportRecord(Transport transport) throws SQLException {
-        String insertCarbonRecordSql = "INSERT INTO carbonrecords (userId, startDate, endDate, amount, typeConsommation) " +
+        String insertCarbonRecordSql = "INSERT INTO carbonrecords (start_date, end_date, amount, type,user_id) " +
                 "VALUES (?, ?, ?, ?, ?) RETURNING id";
         String insertTransportSql = "INSERT INTO transports (record_id, distance_parcourue, type_de_vehicule) " +
                 "VALUES (?, ?, ?)";
@@ -67,11 +66,12 @@ public class CarbonRecordRepository {
             connection.setAutoCommit(false); // Begin transaction
 
             try (PreparedStatement insertCarbonRecordStmt = connection.prepareStatement(insertCarbonRecordSql)) {
-                insertCarbonRecordStmt.setInt(1, transport.getUserId());
-                insertCarbonRecordStmt.setDate(2, Date.valueOf(transport.getStartDate()));
-                insertCarbonRecordStmt.setDate(3, Date.valueOf(transport.getEndDate()));
-                insertCarbonRecordStmt.setBigDecimal(4, transport.getAmount());
-                insertCarbonRecordStmt.setString(5, TypeConsommation.TRANSPORT.name());
+
+                insertCarbonRecordStmt.setDate(1, Date.valueOf(transport.getStartDate()));
+                insertCarbonRecordStmt.setDate(2, Date.valueOf(transport.getEndDate()));
+                insertCarbonRecordStmt.setBigDecimal(3, transport.getAmount());
+                insertCarbonRecordStmt.setString(4, TypeConsommation.TRANSPORT.name());
+                insertCarbonRecordStmt.setInt(5, transport.getUserId());
 
                 ResultSet generatedKeys = insertCarbonRecordStmt.executeQuery();
                 if (!generatedKeys.next()) {
@@ -98,22 +98,21 @@ public class CarbonRecordRepository {
         }
     }
 
-    // Add Alimentation Carbon Record to DB
     public void addAlimentationRecord(Alimentation alimentation) throws SQLException {
-        String insertCarbonRecordSql = "INSERT INTO carbonrecords (userId, startDate, endDate, amount, typeConsommation) " +
+        String insertCarbonRecordSql = "INSERT INTO carbonrecords (start_date, end_date, amount, type,user_id) " +
                 "VALUES (?, ?, ?, ?, ?) RETURNING id";
-        String insertAlimentationSql = "INSERT INTO alimentations (record_id, poids, type_aliment) " +
+        String insertAlimentationSql = "INSERT INTO alimentations (record_id, type_aliment ,poids) " +
                 "VALUES (?, ?, ?)";
 
         try {
             connection.setAutoCommit(false); // Begin transaction
-
             try (PreparedStatement insertCarbonRecordStmt = connection.prepareStatement(insertCarbonRecordSql)) {
-                insertCarbonRecordStmt.setInt(1, alimentation.getUserId());
-                insertCarbonRecordStmt.setDate(2, Date.valueOf(alimentation.getStartDate()));
-                insertCarbonRecordStmt.setDate(3, Date.valueOf(alimentation.getEndDate()));
-                insertCarbonRecordStmt.setBigDecimal(4, alimentation.getAmount());
-                insertCarbonRecordStmt.setString(5, TypeConsommation.ALIMENTATION.name());
+                insertCarbonRecordStmt.setDate(1, Date.valueOf(alimentation.getStartDate()));
+                insertCarbonRecordStmt.setDate(2, Date.valueOf(alimentation.getEndDate()));
+                insertCarbonRecordStmt.setBigDecimal(3, alimentation.getAmount());
+                insertCarbonRecordStmt.setString(4, TypeConsommation.ALIMENTATION.name());
+                insertCarbonRecordStmt.setInt(5, alimentation.getUserId());
+
 
                 ResultSet generatedKeys = insertCarbonRecordStmt.executeQuery();
                 if (!generatedKeys.next()) {
@@ -123,8 +122,9 @@ public class CarbonRecordRepository {
 
                 try (PreparedStatement insertAlimentationStmt = connection.prepareStatement(insertAlimentationSql)) {
                     insertAlimentationStmt.setInt(1, recordId);
-                    insertAlimentationStmt.setDouble(2, alimentation.getFoodWeight());
-                    insertAlimentationStmt.setString(3, alimentation.getFoodType().name());
+                    insertAlimentationStmt.setString(2, alimentation.getFoodType().name());
+                    insertAlimentationStmt.setDouble(3, alimentation.getFoodWeight());
+
 
                     insertAlimentationStmt.executeUpdate();
                 }
@@ -140,7 +140,6 @@ public class CarbonRecordRepository {
         }
     }
 
-    // Delete Carbon Record
     public void deleteCarbonRecord(int recordId) throws SQLException {
         String deleteCarbonRecordSql = "DELETE FROM carbonrecords WHERE id = ?";
         String deleteSpecificRecordSql = "DELETE FROM transports WHERE record_id = ? " +
@@ -172,7 +171,6 @@ public class CarbonRecordRepository {
         }
     }
 
-    // Fetch all carbon records for a user
     public ResultSet getAllRecordsByUserId(int userId) throws SQLException {
         String sql = "SELECT * FROM carbonrecords WHERE userId = ?";
 

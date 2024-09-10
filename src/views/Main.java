@@ -12,6 +12,7 @@ import services.UserService;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.Scanner;
@@ -27,6 +28,7 @@ public class Main {
 
             userService = new UserService(connection);
             CarbonRecordRepository carbonRecordRepository = new CarbonRecordRepository(connection);
+            carbonRecordService = new CarbonRecordService(carbonRecordRepository);
 
             while (true) {
                 System.out.println("\n=== Main Menu ===");
@@ -102,10 +104,10 @@ public class Main {
                     addCarbonRecord(scanner);
                     break;
                 case 2:
-                    // Implement viewCarbonRecords();
+                    viewCarbonRecords(scanner);
                     break;
                 case 3:
-                    // Implement deleteCarbonRecord(scanner);
+                    deleteCarbonRecord(scanner);
                     break;
                 case 4:
                     return;
@@ -319,4 +321,55 @@ public class Main {
             }
         }
     }
+
+
+    private static void deleteCarbonRecord(Scanner scanner) throws SQLException {
+        System.out.println("\n=== Delete Carbon Record ===");
+
+        int recordId = getValidIntegerInput(scanner, "Enter the carbon record ID to delete: ");
+
+        // Confirm with the user before deleting
+        System.out.println("Are you sure you want to delete record ID " + recordId + "? (yes/no): ");
+        String confirmation = scanner.nextLine();
+
+        if (confirmation.equalsIgnoreCase("yes")) {
+            try {
+                carbonRecordService.deleteCarbonRecord(recordId);
+                System.out.println("Carbon record deleted successfully.");
+            } catch (SQLException e) {
+                System.out.println("Error deleting carbon record: " + e.getMessage());
+            }
+        } else {
+            System.out.println("Delete operation cancelled.");
+        }
+    }
+    private static void viewCarbonRecords(Scanner scanner) throws SQLException {
+        System.out.println("\n=== View Carbon Records ===");
+
+        int userId = getValidIntegerInput(scanner, "Enter user ID: ");
+
+        try {
+            ResultSet records = carbonRecordService.getAllRecordsByUserId(userId);
+
+            if (!records.isBeforeFirst()) {
+                System.out.println("No carbon records found for this user.");
+                return;
+            }
+
+            while (records.next()) {
+                int recordId = records.getInt("id");
+                LocalDate startDate = records.getDate("start_date").toLocalDate();
+                LocalDate endDate = records.getDate("end_date").toLocalDate();
+                BigDecimal amount = records.getBigDecimal("amount");
+                String type = records.getString("type");
+
+                System.out.printf("Record ID: %d, Type: %s, Start Date: %s, End Date: %s, Amount: %s\n",
+                        recordId, type, startDate, endDate, amount);
+            }
+        } catch (SQLException e) {
+            System.out.println("Error retrieving carbon records: " + e.getMessage());
+        }
+    }
+
+
 }
