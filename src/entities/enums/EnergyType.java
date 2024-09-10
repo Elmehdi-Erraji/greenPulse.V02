@@ -5,5 +5,5 @@ public enum EnergyType {
     GAS,
     SOLAR,
     WIND,
-    OTHER
+    UNKNOWN, OTHER
 }

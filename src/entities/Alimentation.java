@@ -1,19 +1,21 @@
 package entities;
 
+import entities.enums.FoodType;
 import entities.enums.TypeConsommation;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
 public class Alimentation extends CarbonRecord {
     private double foodConsumption;
-    private String foodType;
+    private FoodType foodType;
+    private double foodWeight; // Added for weight management
 
-    
     // Constructor
-    public Alimentation(LocalDate startDate, LocalDate endDate, BigDecimal amount, TypeConsommation type, int userId, double foodConsumption, String foodType) {
+    public Alimentation(LocalDate startDate, LocalDate endDate, BigDecimal amount, TypeConsommation type, int userId, double foodConsumption, FoodType foodType, double foodWeight) {
         super(startDate, endDate, amount, type, userId);
         this.foodConsumption = foodConsumption;
         this.foodType = foodType;
+        this.foodWeight = foodWeight; // Set foodWeight properly
     }
 
     // Getters and setters
@@ -25,21 +27,30 @@ public class Alimentation extends CarbonRecord {
         this.foodConsumption = foodConsumption;
     }
 
-    public String getFoodType() {
+    public FoodType getFoodType() {
         return foodType;
     }
 
-    public void setFoodType(String foodType) {
+    public void setFoodType(FoodType foodType) {
         this.foodType = foodType;
     }
 
+    public double getFoodWeight() {
+        return foodWeight;
+    }
+
+    public void setFoodWeight(double foodWeight) {
+        this.foodWeight = foodWeight;
+    }
+
+    // Override the impact calculation based on food consumption
     @Override
     public double calculateImpact() {
-        return foodConsumption * 0.20; // Replace with the actual formula for impact calculation
+        return foodConsumption * 0.20; // You can adjust this formula as per your requirement
     }
 
     @Override
     public String toString() {
-        return String.format("Alimentation [foodConsumption=%.2f, foodType=%s, %s]", foodConsumption, foodType, super.toString());
+        return String.format("Alimentation [foodConsumption=%.2f, foodType=%s, foodWeight=%.2f, %s]", foodConsumption, foodType, foodWeight, super.toString());
     }
 }

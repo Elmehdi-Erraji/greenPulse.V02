@@ -6,5 +6,5 @@ public enum FoodType {
     MEAT,
     DAIRY,
     SEAFOOD,
-    OTHER
+    UNKNOWN, OTHER
 }

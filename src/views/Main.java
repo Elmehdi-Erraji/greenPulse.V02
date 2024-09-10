@@ -1,7 +1,10 @@
 package views;
 
 import entities.*;
+import entities.enums.EnergyType;
+import entities.enums.FoodType;
 import entities.enums.TypeConsommation;
+import entities.enums.VehicleType;
 import repository.CarbonRecordRepository;
 import services.CarbonRecordService;
 import services.UserService;
@@ -23,10 +26,10 @@ public class Main {
              Scanner scanner = new Scanner(System.in)) {
 
             userService = new UserService(connection);
+            CarbonRecordRepository carbonRecordRepository = new CarbonRecordRepository(connection);
 
-            carbonRecordService = new CarbonRecordService(connection);
             while (true) {
-                System.out.println("Main Menu:");
+                System.out.println("\n=== Main Menu ===");
                 System.out.println("1. User Management");
                 System.out.println("2. Carbon Record Management");
                 System.out.println("3. Exit");
@@ -42,7 +45,7 @@ public class Main {
                         break;
                     case 3:
                         System.out.println("Exiting...");
-                        return; // Exit the program
+                        return;
                     default:
                         System.out.println("Invalid choice. Please try again.");
                 }
@@ -52,34 +55,9 @@ public class Main {
         }
     }
 
-    private static int getValidIntegerInput(Scanner scanner, String prompt) {
-        while (true) {
-            System.out.print(prompt);
-            if (scanner.hasNextInt()) {
-                int input = scanner.nextInt();
-                scanner.nextLine(); // Consume newline
-                return input;
-            } else {
-                System.out.println("Invalid input. Please enter a valid integer.");
-                scanner.nextLine(); // Discard invalid input
-            }
-        }
-    }
-
-    private static LocalDate getValidDateInput(Scanner scanner, String prompt) {
-        while (true) {
-            System.out.print(prompt);
-            try {
-                return LocalDate.parse(scanner.nextLine());
-            } catch (Exception e) {
-                System.out.println("Invalid date format. Please enter the date in yyyy-MM-dd format.");
-            }
-        }
-    }
-
     private static void userManagementMenu(Scanner scanner) throws SQLException {
         while (true) {
-            System.out.println("User Management Menu:");
+            System.out.println("\n=== User Management Menu ===");
             System.out.println("1. Add User");
             System.out.println("2. View Users");
             System.out.println("3. Update User");
@@ -102,7 +80,7 @@ public class Main {
                     deleteUser(scanner);
                     break;
                 case 5:
-                    return; // Go back to the main menu
+                    return;
                 default:
                     System.out.println("Invalid choice. Please try again.");
             }
@@ -111,30 +89,26 @@ public class Main {
 
     private static void carbonRecordManagementMenu(Scanner scanner) throws SQLException {
         while (true) {
-            System.out.println("Carbon Record Management Menu:");
+            System.out.println("\n=== Carbon Record Management Menu ===");
             System.out.println("1. Add Carbon Record");
             System.out.println("2. View Carbon Records");
-            System.out.println("3. Update Carbon Record");
-            System.out.println("4. Delete Carbon Record");
-            System.out.println("5. Go Back");
+            System.out.println("3. Delete Carbon Record");
+            System.out.println("4. Go Back");
 
             int choice = getValidIntegerInput(scanner, "Enter your choice: ");
 
             switch (choice) {
                 case 1:
-                    addCarbonRecord(scanner, userService, carbonRecordService);
+                    addCarbonRecord(scanner);
                     break;
                 case 2:
-                    viewCarbonRecords();
+                    // Implement viewCarbonRecords();
                     break;
                 case 3:
-                    updateCarbonRecord(scanner);
+                    // Implement deleteCarbonRecord(scanner);
                     break;
                 case 4:
-                    deleteCarbonRecord(scanner);
-                    break;
-                case 5:
-                    return; // Go back to the main menu
+                    return;
                 default:
                     System.out.println("Invalid choice. Please try again.");
             }
@@ -144,17 +118,16 @@ public class Main {
     private static void addUser(Scanner scanner) throws SQLException {
         System.out.print("Enter user name: ");
         String name = scanner.nextLine();
-        System.out.print("Enter user age: ");
         int age = getValidIntegerInput(scanner, "Enter user age: ");
 
-        User user = new User(0, name, age);  // ID will be auto-generated by the database
+        User user = new User(0, name, age);
         userService.createUser(user);
 
         System.out.println("User added successfully!");
     }
 
     private static void viewUsers() throws SQLException {
-        System.out.println("Users:");
+        System.out.println("\n=== Users ===");
         for (User user : userService.getAllUsers()) {
             System.out.println(user);
         }
@@ -175,22 +148,11 @@ public class Main {
 
     private static void deleteUser(Scanner scanner) throws SQLException {
         int id = getValidIntegerInput(scanner, "Enter user ID to delete: ");
-
         userService.deleteUser(id);
-
         System.out.println("User deleted successfully!");
     }
 
-    private static void addCarbonRecord(Scanner scanner, UserService userService, CarbonRecordService carbonRecordService) throws SQLException {
-        LocalDate startDate = getValidDateInput(scanner, "Enter start date (yyyy-MM-dd): ");
-        LocalDate endDate = getValidDateInput(scanner, "Enter end date (yyyy-MM-dd): ");
-        System.out.print("Enter amount: ");
-        BigDecimal amount = new BigDecimal(scanner.nextLine());
-        System.out.println("Enter type:");
-        for (TypeConsommation type : TypeConsommation.values()) {
-            System.out.println("- " + type);
-        }
-        TypeConsommation type = TypeConsommation.valueOf(scanner.nextLine().toUpperCase());
+    private static void addCarbonRecord(Scanner scanner) throws SQLException {
         int userId = getValidIntegerInput(scanner, "Enter user ID: ");
 
         if (!userService.isUserExist(userId)) {
@@ -198,72 +160,163 @@ public class Main {
             return;
         }
 
-        CarbonRecord record = createCarbonRecordFromInput(scanner, type, startDate, endDate, amount, userId);
-        carbonRecordService.createCarbonRecord(record);
-        System.out.println("Carbon record added successfully!");
-    }
+        System.out.println("Select consumption type:");
+        TypeConsommation type = getTypeConsommationFromInput(scanner);
 
-    private static CarbonRecord createCarbonRecordFromInput(Scanner scanner, TypeConsommation type, LocalDate startDate, LocalDate endDate, BigDecimal amount, int userId) {
         switch (type) {
-            case TRANSPORT:
-                System.out.print("Enter distance: ");
-                double distance = scanner.nextDouble();
-                scanner.nextLine(); // Consume newline
-                System.out.print("Enter vehicle type: ");
-                String vehicleType = scanner.nextLine();
-                return new Transport(startDate, endDate, amount, type, userId, distance, vehicleType);
             case LOGEMENT:
-                System.out.print("Enter energy consumption: ");
-                double energyConsumption = scanner.nextDouble();
-                scanner.nextLine(); // Consume newline
-                System.out.print("Enter energy type: ");
-                String energyType = scanner.nextLine();
-                return new Logement(startDate, endDate, amount, type, userId, energyConsumption, energyType);
+                addLogementRecord(scanner, userId);
+                break;
+            case TRANSPORT:
+                addTransportRecord(scanner, userId);
+                break;
             case ALIMENTATION:
-                System.out.print("Enter food consumption: ");
-                double foodConsumption = scanner.nextDouble();
-                scanner.nextLine(); // Consume newline
-                System.out.print("Enter food type: ");
-                String foodType = scanner.nextLine();
-                return new Alimentation(startDate, endDate, amount, type, userId, foodConsumption, foodType);
+                addAlimentationRecord(scanner, userId);
+                break;
             default:
-                throw new IllegalArgumentException("Unknown type");
+                System.out.println("Unknown consumption type.");
+                break;
         }
     }
 
-    private static void viewCarbonRecords() throws SQLException {
-        System.out.println("Carbon Records:");
-        for (CarbonRecord record : carbonRecordService.getAllCarbonRecords()) {
-            System.out.println(record);
+    private static void addLogementRecord(Scanner scanner, int userId) throws SQLException {
+        LocalDate startDate = getValidDateInput(scanner, "Enter start date (yyyy-MM-dd): ");
+        LocalDate endDate = getValidDateInput(scanner, "Enter end date (yyyy-MM-dd): ");
+        BigDecimal amount = getValidBigDecimalInput(scanner, "Enter amount: ");
+        double energyConsumption = getValidDoubleInput(scanner, "Enter energy consumption: ");
+        EnergyType energyType = getEnergyTypeFromInput(scanner);
+
+        Logement logement = new Logement(startDate, endDate, amount, TypeConsommation.LOGEMENT, userId, energyConsumption, energyType);
+        carbonRecordService.addLogementRecord(logement);
+        System.out.println("Logement carbon record added successfully!");
+    }
+
+    private static void addTransportRecord(Scanner scanner, int userId) throws SQLException {
+        LocalDate startDate = getValidDateInput(scanner, "Enter start date (yyyy-MM-dd): ");
+        LocalDate endDate = getValidDateInput(scanner, "Enter end date (yyyy-MM-dd): ");
+        BigDecimal amount = getValidBigDecimalInput(scanner, "Enter amount: ");
+        double distance = getValidDoubleInput(scanner, "Enter distance: ");
+        VehicleType vehicleType = getVehicleTypeFromInput(scanner);
+
+        Transport transport = new Transport(startDate, endDate, amount, TypeConsommation.TRANSPORT, userId, distance, vehicleType);
+        carbonRecordService.addTransportRecord(transport);
+        System.out.println("Transport carbon record added successfully!");
+    }
+
+    private static void addAlimentationRecord(Scanner scanner, int userId) throws SQLException {
+        LocalDate startDate = getValidDateInput(scanner, "Enter start date (yyyy-MM-dd): ");
+        LocalDate endDate = getValidDateInput(scanner, "Enter end date (yyyy-MM-dd): ");
+        BigDecimal amount = getValidBigDecimalInput(scanner, "Enter amount: ");
+        double foodConsumption = getValidDoubleInput(scanner, "Enter food consumption: ");
+        double foodWeight = getValidDoubleInput(scanner, "Enter food weight: ");
+        FoodType foodType = getFoodTypeFromInput(scanner);
+
+        Alimentation alimentation = new Alimentation(startDate, endDate, amount, TypeConsommation.ALIMENTATION, userId, foodConsumption, foodType, foodWeight);
+        carbonRecordService.addAlimentationRecord(alimentation);
+        System.out.println("Alimentation carbon record added successfully!");
+    }
+
+    private static TypeConsommation getTypeConsommationFromInput(Scanner scanner) {
+        System.out.println("Select consumption type:");
+        TypeConsommation[] types = TypeConsommation.values();
+        for (int i = 0; i < types.length; i++) {
+            System.out.println((i + 1) + ". " + types[i].name());
+        }
+
+        int choice = getValidIntegerInput(scanner, "Enter the number corresponding to the consumption type: ");
+        if (choice < 1 || choice > types.length) {
+            System.out.println("Invalid choice. Please try again.");
+            return getTypeConsommationFromInput(scanner); // Recursive retry
+        }
+        return types[choice - 1];
+    }
+
+    private static EnergyType getEnergyTypeFromInput(Scanner scanner) {
+        System.out.println("Select energy type:");
+        EnergyType[] energyTypes = EnergyType.values();
+        for (int i = 0; i < energyTypes.length; i++) {
+            System.out.println((i + 1) + ". " + energyTypes[i].name());
+        }
+
+        int choice = getValidIntegerInput(scanner, "Enter the number corresponding to the energy type: ");
+        if (choice < 1 || choice > energyTypes.length) {
+            System.out.println("Invalid choice. Please try again.");
+            return getEnergyTypeFromInput(scanner); // Recursive retry
+        }
+        return energyTypes[choice - 1];
+    }
+
+    private static VehicleType getVehicleTypeFromInput(Scanner scanner) {
+        System.out.println("Select vehicle type:");
+        VehicleType[] vehicleTypes = VehicleType.values();
+        for (int i = 0; i < vehicleTypes.length; i++) {
+            System.out.println((i + 1) + ". " + vehicleTypes[i].name());
+        }
+
+        int choice = getValidIntegerInput(scanner, "Enter the number corresponding to the vehicle type: ");
+        if (choice < 1 || choice > vehicleTypes.length) {
+            System.out.println("Invalid choice. Please try again.");
+            return getVehicleTypeFromInput(scanner); // Recursive retry
+        }
+        return vehicleTypes[choice - 1];
+    }
+
+    private static FoodType getFoodTypeFromInput(Scanner scanner) {
+        System.out.println("Select food type:");
+        FoodType[] foodTypes = FoodType.values();
+        for (int i = 0; i < foodTypes.length; i++) {
+            System.out.println((i + 1) + ". " + foodTypes[i].name());
+        }
+
+        int choice = getValidIntegerInput(scanner, "Enter the number corresponding to the food type: ");
+        if (choice < 1 || choice > foodTypes.length) {
+            System.out.println("Invalid choice. Please try again.");
+            return getFoodTypeFromInput(scanner); // Recursive retry
+        }
+        return foodTypes[choice - 1];
+    }
+
+    private static LocalDate getValidDateInput(Scanner scanner, String prompt) {
+        while (true) {
+            System.out.print(prompt);
+            try {
+                return LocalDate.parse(scanner.nextLine());
+            } catch (Exception e) {
+                System.out.println("Invalid date format. Please try again.");
+            }
         }
     }
 
-    private static void updateCarbonRecord(Scanner scanner) throws SQLException {
-        int id = getValidIntegerInput(scanner, "Enter record ID to update: ");
-
-        LocalDate startDate = getValidDateInput(scanner, "Enter new start date (yyyy-MM-dd): ");
-        LocalDate endDate = getValidDateInput(scanner, "Enter new end date (yyyy-MM-dd): ");
-        System.out.print("Enter new amount: ");
-        BigDecimal amount = new BigDecimal(scanner.nextLine());
-        System.out.println("Enter new type:");
-        for (TypeConsommation type : TypeConsommation.values()) {
-            System.out.println("- " + type);
+    private static int getValidIntegerInput(Scanner scanner, String prompt) {
+        while (true) {
+            System.out.print(prompt);
+            try {
+                return Integer.parseInt(scanner.nextLine());
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid input. Please enter a valid number.");
+            }
         }
-        TypeConsommation type = TypeConsommation.valueOf(scanner.nextLine().toUpperCase());
-        int userId = getValidIntegerInput(scanner, "Enter new user ID: ");
-
-        CarbonRecord record = createCarbonRecordFromInput(scanner, type, startDate, endDate, amount, userId);
-        record.setId(id); // Set the ID of the record to update
-        carbonRecordService.updateCarbonRecord(record);
-
-        System.out.println("Carbon record updated successfully!");
     }
 
-    private static void deleteCarbonRecord(Scanner scanner) throws SQLException {
-        int id = getValidIntegerInput(scanner, "Enter record ID to delete: ");
+    private static BigDecimal getValidBigDecimalInput(Scanner scanner, String prompt) {
+        while (true) {
+            System.out.print(prompt);
+            try {
+                return new BigDecimal(scanner.nextLine());
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid input. Please enter a valid decimal number.");
+            }
+        }
+    }
 
-        carbonRecordService.deleteCarbonRecord(id);
-
-        System.out.println("Carbon record deleted successfully!");
+    private static double getValidDoubleInput(Scanner scanner, String prompt) {
+        while (true) {
+            System.out.print(prompt);
+            try {
+                return Double.parseDouble(scanner.nextLine());
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid input. Please enter a valid number.");
+            }
+        }
     }
 }

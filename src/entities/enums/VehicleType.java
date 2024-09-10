@@ -7,5 +7,5 @@ public enum VehicleType {
     BICYCLE,
     MOTORCYCLE,
     AIRPLANE,
-    WALKING
+    UNKNOWN, WALKING
 }

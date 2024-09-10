@@ -1,81 +1,135 @@
 package services;
 
-import entities.enums.TypeConsommation;
+import entities.*;
 import repository.CarbonRecordRepository;
-import entities.CarbonRecord;
-import entities.Transport;
-import entities.Logement;
-import entities.Alimentation;
 
-import java.sql.Connection;
+import java.math.BigDecimal;
 import java.sql.SQLException;
-import java.time.LocalDate;
-import java.util.List;
+import java.util.Optional;
 
 public class CarbonRecordService {
 
-    private CarbonRecordRepository repository;
+    private CarbonRecordRepository carbonRecordRepository;
 
-    public CarbonRecordService(Connection connection) {
-        this.repository = new CarbonRecordRepository(connection);
+    public CarbonRecordService(CarbonRecordRepository carbonRecordRepository) {
+        this.carbonRecordRepository = carbonRecordRepository;
     }
 
-    public void createCarbonRecord(CarbonRecord record) {
+    // Add Logement Record
+    public void addLogementRecord(Logement logement) throws SQLException {
+        if (logement == null) {
+            throw new IllegalArgumentException("Logement record cannot be null.");
+        }
+
+        validateLogement(logement);
+
         try {
-            repository.createCarbonRecord(record);
+            carbonRecordRepository.addLogementRecord(logement);
         } catch (SQLException e) {
-            // Handle the exception appropriately (e.g., log it, rethrow it, etc.)
-            e.printStackTrace();
+            System.err.println("Error adding logement record: " + e.getMessage());
+            throw e; // rethrow to handle it at a higher level if necessary
         }
     }
 
-    public CarbonRecord getCarbonRecordById(int id) {
+    // Add Transport Record
+    public void addTransportRecord(Transport transport) throws SQLException {
+        if (transport == null) {
+            throw new IllegalArgumentException("Transport record cannot be null.");
+        }
+
+        validateTransport(transport);
+
         try {
-            return repository.getCarbonRecordById(id);
+            carbonRecordRepository.addTransportRecord(transport);
         } catch (SQLException e) {
-            // Handle the exception appropriately
-            e.printStackTrace();
-            return null;
+            System.err.println("Error adding transport record: " + e.getMessage());
+            throw e; // rethrow to handle it at a higher level if necessary
         }
     }
 
-    public List<CarbonRecord> getAllCarbonRecords() {
+    // Add Alimentation Record
+    public void addAlimentationRecord(Alimentation alimentation) throws SQLException {
+        if (alimentation == null) {
+            throw new IllegalArgumentException("Alimentation record cannot be null.");
+        }
+
+        validateAlimentation(alimentation);
+
         try {
-            return repository.getAllCarbonRecords();
+            carbonRecordRepository.addAlimentationRecord(alimentation);
         } catch (SQLException e) {
-            // Handle the exception appropriately
-            e.printStackTrace();
-            return null;
+            System.err.println("Error adding alimentation record: " + e.getMessage());
+            throw e; // rethrow to handle it at a higher level if necessary
         }
     }
 
-    public void updateCarbonRecord(CarbonRecord record) {
+    // Delete a carbon record
+    public void deleteCarbonRecord(int recordId) throws SQLException {
+        if (recordId <= 0) {
+            throw new IllegalArgumentException("Invalid record ID.");
+        }
+
         try {
-            repository.updateCarbonRecord(record);
+            carbonRecordRepository.deleteCarbonRecord(recordId);
         } catch (SQLException e) {
-            // Handle the exception appropriately
-            e.printStackTrace();
+            System.err.println("Error deleting carbon record with ID " + recordId + ": " + e.getMessage());
+            throw e; // rethrow to handle it at a higher level if necessary
         }
     }
 
-    public void deleteCarbonRecord(int id) {
+    // Fetch all carbon records for a user
+    public void getAllRecordsByUserId(int userId) throws SQLException {
+        if (userId <= 0) {
+            throw new IllegalArgumentException("Invalid user ID.");
+        }
+
         try {
-            repository.deleteCarbonRecord(id);
+            carbonRecordRepository.getAllRecordsByUserId(userId);
         } catch (SQLException e) {
-            // Handle the exception appropriately
-            e.printStackTrace();
+            System.err.println("Error fetching records for user ID " + userId + ": " + e.getMessage());
+            throw e; // rethrow to handle it at a higher level if necessary
         }
     }
 
-    public List<CarbonRecord> getCarbonRecordsByType(TypeConsommation type) {
-        try {
-            return repository.getCarbonRecordsByType(type);
-        } catch (SQLException e) {
-            // Handle the exception appropriately
-            e.printStackTrace();
-            return null;
+    // Validate Logement record
+    private void validateLogement(Logement logement) {
+        if (logement.getStartDate() == null || logement.getEndDate() == null) {
+            throw new IllegalArgumentException("Logement dates cannot be null.");
+        }
+        if (logement.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Logement amount must be greater than zero.");
+        }
+        if (logement.getEnergyConsumption() <= 0) {
+            throw new IllegalArgumentException("Logement energy consumption must be greater than zero.");
         }
     }
 
-    // Additional methods to support business logic can be added here
+    // Validate Transport record
+    private void validateTransport(Transport transport) {
+        if (transport.getStartDate() == null || transport.getEndDate() == null) {
+            throw new IllegalArgumentException("Transport dates cannot be null.");
+        }
+        if (transport.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Transport amount must be greater than zero.");
+        }
+        if (transport.getDistance() <= 0) {
+            throw new IllegalArgumentException("Transport distance must be greater than zero.");
+        }
+    }
+
+    // Validate Alimentation record
+    private void validateAlimentation(Alimentation alimentation) {
+        if (alimentation.getStartDate() == null || alimentation.getEndDate() == null) {
+            throw new IllegalArgumentException("Alimentation dates cannot be null.");
+        }
+        if (alimentation.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Alimentation amount must be greater than zero.");
+        }
+        if (alimentation.getFoodConsumption() <= 0) {
+            throw new IllegalArgumentException("Alimentation food consumption must be greater than zero.");
+        }
+        if (alimentation.getFoodWeight() <= 0) {
+            throw new IllegalArgumentException("Alimentation food weight must be greater than zero.");
+        }
+    }
 }
