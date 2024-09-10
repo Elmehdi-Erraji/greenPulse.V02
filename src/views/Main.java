@@ -15,8 +15,10 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.util.Comparator;
+import java.util.Map;
 import java.util.Scanner;
-
+import java.util.List;
 public class Main {
 
     private static UserService userService;
@@ -349,22 +351,21 @@ public class Main {
         int userId = getValidIntegerInput(scanner, "Enter user ID: ");
 
         try {
-            ResultSet records = carbonRecordService.getAllRecordsByUserId(userId);
-            if (records == null) {
-                System.out.println("No carbon records found for this user.");
-                return;
-            }
-            if (!records.isBeforeFirst()) {
+            List<Map<String, Object>> records = carbonRecordService.getAllRecordsByUserId(userId);
+            if (records.isEmpty()) {
                 System.out.println("No carbon records found for this user.");
                 return;
             }
 
-            while (records.next()) {
-                int recordId = records.getInt("id");
-                LocalDate startDate = records.getDate("start_date").toLocalDate();
-                LocalDate endDate = records.getDate("end_date").toLocalDate();
-                BigDecimal amount = records.getBigDecimal("amount");
-                String type = records.getString("type");
+            // Sort records based on the 'type'
+            records.sort(Comparator.comparing(record -> (String) record.get("type")));
+
+            for (Map<String, Object> record : records) {
+                int recordId = (Integer) record.get("id");
+                LocalDate startDate = (LocalDate) record.get("start_date");
+                LocalDate endDate = (LocalDate) record.get("end_date");
+                BigDecimal amount = (BigDecimal) record.get("amount");
+                String type = (String) record.get("type");
 
                 System.out.printf("Record ID: %d, Type: %s, Start Date: %s, End Date: %s, Amount: %s\n",
                         recordId, type, startDate, endDate, amount);
@@ -373,6 +374,4 @@ public class Main {
             System.out.println("Error retrieving carbon records: " + e.getMessage());
         }
     }
-
-
 }

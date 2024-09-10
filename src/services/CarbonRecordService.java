@@ -6,6 +6,8 @@ import repository.CarbonRecordRepository;
 import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.List;
+import java.util.Map;
 
 public class CarbonRecordService {
 
@@ -73,20 +75,9 @@ public class CarbonRecordService {
         }
     }
 
-    public ResultSet getAllRecordsByUserId(int userId) throws SQLException {
-        if (userId <= 0) {
-            throw new IllegalArgumentException("Invalid user ID.");
-        }
-
-        try {
-            carbonRecordRepository.getAllRecordsByUserId(userId);
-        } catch (SQLException e) {
-            System.err.println("Error fetching records for user ID " + userId + ": " + e.getMessage());
-            throw e;
-        }
-        return null;
+    public List<Map<String, Object>> getAllRecordsByUserId(int userId) throws SQLException {
+        return carbonRecordRepository.findAllByUserId(userId);
     }
-
     private void validateLogement(Logement logement) {
         if (logement.getStartDate() == null || logement.getEndDate() == null) {
             throw new IllegalArgumentException("Logement dates cannot be null.");

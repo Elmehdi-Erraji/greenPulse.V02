@@ -3,7 +3,13 @@ package repository;
 import entities.*;
 import entities.enums.TypeConsommation;
 
+import java.math.BigDecimal;
 import java.sql.*;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class CarbonRecordRepository {
 
@@ -156,11 +162,25 @@ public class CarbonRecordRepository {
         }
     }
 
-    public ResultSet getAllRecordsByUserId(int userId) throws SQLException {
+    public List<Map<String, Object>> findAllByUserId(int userId) throws SQLException {
         String sql = "SELECT * FROM carbonrecords WHERE user_id = ?";
+        List<Map<String, Object>> recordsList = new ArrayList<>();
 
-        PreparedStatement statement = connection.prepareStatement(sql);
-        statement.setInt(1, userId);
-        return statement.executeQuery();
-    }
-}
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, userId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Map<String, Object> recordMap = new HashMap<>();
+                    recordMap.put("id", rs.getInt("id"));
+                    recordMap.put("start_date", rs.getDate("start_date").toLocalDate());
+                    recordMap.put("end_date", rs.getDate("end_date").toLocalDate());
+                    recordMap.put("amount", rs.getBigDecimal("amount"));
+                    recordMap.put("type", rs.getString("type"));
+
+                    recordsList.add(recordMap);
+                }
+            }
+        }
+
+        return recordsList;
+    }}
