@@ -77,7 +77,9 @@ public class Main {
                     addUser(scanner);
                     break;
                 case 2:
+
                     viewUsers();
+
                     break;
                 case 3:
                     viewInactiveUsers(scanner);
@@ -89,7 +91,7 @@ public class Main {
                     deleteUser(scanner);
                     break;
                 case 6:
-                    calculateAverageCarbonConsumption(scanner);
+                   calculateAverageCarbonConsumption(scanner);
                     break;
                 case 7:
                     sortUsersByCarbonConsumption(scanner);
@@ -132,7 +134,10 @@ public class Main {
             }
         }
     }
-/*USER management starts here*/
+
+
+
+    /*USER management starts here*/
     private static void addUser(Scanner scanner) throws SQLException {
         System.out.print("Enter user name: ");
         String name = scanner.nextLine();
@@ -220,6 +225,9 @@ public class Main {
             }
         }
     }
+
+
+
     private static void calculateAverageCarbonConsumption(Scanner scanner) throws SQLException {
         System.out.println("Enter start date (yyyy-mm-dd): ");
         LocalDate startDate = LocalDate.parse(scanner.nextLine());
@@ -227,32 +235,27 @@ public class Main {
         System.out.println("Enter end date (yyyy-mm-dd): ");
         LocalDate endDate = LocalDate.parse(scanner.nextLine());
 
-        double averageConsumption = userService.calculateAverageCarbonConsumption(startDate, endDate);
+        double averageConsumption = userService.calculateAverageCarbonConsumption(startDate,endDate);
         System.out.printf("Average Carbon Consumption from %s to %s is %.2f KgCO2eq\n", startDate, endDate, averageConsumption);
     }
+
+
+
     private static void sortUsersByCarbonConsumption(Scanner scanner) throws SQLException {
-        System.out.println("Enter start date (yyyy-mm-dd): ");
-        LocalDate startDate = LocalDate.parse(scanner.nextLine());
+        List<User> sortedUsers = userService.sortUsersByTotalCarbonConsumption();
 
-        System.out.println("Enter end date (yyyy-mm-dd): ");
-        LocalDate endDate = LocalDate.parse(scanner.nextLine());
-
-        List<User> sortedUsers = userService.getUsersSortedByCarbonConsumption(startDate, endDate);
-
-        System.out.println("\nUsers sorted by carbon consumption:");
+        System.out.println("\nUsers sorted by total carbon consumption:");
         for (User user : sortedUsers) {
-            System.out.printf("User ID: %d, Name: %s, Total Consumption: %.2f KgCO2eq\n",
-                    user.getId(), user.getName(), user.getCarbonRecords().stream()
-                            .mapToDouble(record -> record.getAmount().doubleValue()) // Convert BigDecimal to double
-                            .sum());
+            System.out.println(user.toString()); // Using the overridden toString() method to display user information
         }
     }
-    private static void filterUsersByCarbonConsumption(Scanner scanner) throws SQLException {
+
+   private static void filterUsersByCarbonConsumption(Scanner scanner) throws SQLException {
         System.out.println("Enter the consumption threshold (KgCO2eq): ");
         double threshold = scanner.nextDouble();
         scanner.nextLine(); // Consume newline
 
-        List<User> filteredUsers = userService.getUsersByCarbonConsumptionThreshold(threshold);
+        List<User> filteredUsers = userService.filterUsersByTotalConsumption(threshold);
 
         System.out.println("\nUsers with consumption exceeding " + threshold + " KgCO2eq:");
         for (User user : filteredUsers) {
@@ -333,110 +336,6 @@ public class Main {
         System.out.println("Alimentation carbon record added successfully!");
     }
 
-    private static TypeConsommation getTypeConsommationFromInput(Scanner scanner) {
-        System.out.println("Select consumption type:");
-        TypeConsommation[] types = TypeConsommation.values();
-        for (int i = 0; i < types.length; i++) {
-            System.out.println((i + 1) + ". " + types[i].name());
-        }
-
-        int choice = getValidIntegerInput(scanner, "Enter the number corresponding to the consumption type: ");
-        if (choice < 1 || choice > types.length) {
-            System.out.println("Invalid choice. Please try again.");
-            return getTypeConsommationFromInput(scanner); // Recursive retry
-        }
-        return types[choice - 1];
-    }
-
-    private static EnergyType getEnergyTypeFromInput(Scanner scanner) {
-        System.out.println("Select energy type:");
-        EnergyType[] energyTypes = EnergyType.values();
-        for (int i = 0; i < energyTypes.length; i++) {
-            System.out.println((i + 1) + ". " + energyTypes[i].name());
-        }
-
-        int choice = getValidIntegerInput(scanner, "Enter the number corresponding to the energy type: ");
-        if (choice < 1 || choice > energyTypes.length) {
-            System.out.println("Invalid choice. Please try again.");
-            return getEnergyTypeFromInput(scanner); // Recursive retry
-        }
-        return energyTypes[choice - 1];
-    }
-
-    private static VehicleType getVehicleTypeFromInput(Scanner scanner) {
-        System.out.println("Select vehicle type:");
-        VehicleType[] vehicleTypes = VehicleType.values();
-        for (int i = 0; i < vehicleTypes.length; i++) {
-            System.out.println((i + 1) + ". " + vehicleTypes[i].name());
-        }
-
-        int choice = getValidIntegerInput(scanner, "Enter the number corresponding to the vehicle type: ");
-        if (choice < 1 || choice > vehicleTypes.length) {
-            System.out.println("Invalid choice. Please try again.");
-            return getVehicleTypeFromInput(scanner); // Recursive retry
-        }
-        return vehicleTypes[choice - 1];
-    }
-
-    private static FoodType getFoodTypeFromInput(Scanner scanner) {
-        System.out.println("Select food type:");
-        FoodType[] foodTypes = FoodType.values();
-        for (int i = 0; i < foodTypes.length; i++) {
-            System.out.println((i + 1) + ". " + foodTypes[i].name());
-        }
-
-        int choice = getValidIntegerInput(scanner, "Enter the number corresponding to the food type: ");
-        if (choice < 1 || choice > foodTypes.length) {
-            System.out.println("Invalid choice. Please try again.");
-            return getFoodTypeFromInput(scanner); // Recursive retry
-        }
-        return foodTypes[choice - 1];
-    }
-
-    private static LocalDate getValidDateInput(Scanner scanner, String prompt) {
-        while (true) {
-            System.out.print(prompt);
-            try {
-                return LocalDate.parse(scanner.nextLine());
-            } catch (Exception e) {
-                System.out.println("Invalid date format. Please try again.");
-            }
-        }
-    }
-
-    private static int getValidIntegerInput(Scanner scanner, String prompt) {
-        while (true) {
-            System.out.print(prompt);
-            try {
-                return Integer.parseInt(scanner.nextLine());
-            } catch (NumberFormatException e) {
-                System.out.println("Invalid input. Please enter a valid number.");
-            }
-        }
-    }
-
-    private static BigDecimal getValidBigDecimalInput(Scanner scanner, String prompt) {
-        while (true) {
-            System.out.print(prompt);
-            try {
-                return new BigDecimal(scanner.nextLine());
-            } catch (NumberFormatException e) {
-                System.out.println("Invalid input. Please enter a valid decimal number.");
-            }
-        }
-    }
-
-    private static double getValidDoubleInput(Scanner scanner, String prompt) {
-        while (true) {
-            System.out.print(prompt);
-            try {
-                return Double.parseDouble(scanner.nextLine());
-            } catch (NumberFormatException e) {
-                System.out.println("Invalid input. Please enter a valid number.");
-            }
-        }
-    }
-
     private static void deleteCarbonRecord(Scanner scanner) throws SQLException {
         System.out.println("\n=== Delete Carbon Record ===");
 
@@ -488,5 +387,124 @@ public class Main {
     }
 
     /*CARBON management ends here*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   /* Validation methods start*/
+    private static double getValidDoubleInput(Scanner scanner, String prompt) {
+       while (true) {
+           System.out.print(prompt);
+           try {
+               return Double.parseDouble(scanner.nextLine());
+           } catch (NumberFormatException e) {
+               System.out.println("Invalid input. Please enter a valid number.");
+           }
+       }
+   }
+    private static BigDecimal getValidBigDecimalInput(Scanner scanner, String prompt) {
+        while (true) {
+            System.out.print(prompt);
+            try {
+                return new BigDecimal(scanner.nextLine());
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid input. Please enter a valid decimal number.");
+            }
+        }
+    }
+    private static LocalDate getValidDateInput(Scanner scanner, String prompt) {
+        while (true) {
+            System.out.print(prompt);
+            try {
+                return LocalDate.parse(scanner.nextLine());
+            } catch (Exception e) {
+                System.out.println("Invalid date format. Please try again.");
+            }
+        }
+    }
+    private static int getValidIntegerInput(Scanner scanner, String prompt) {
+        while (true) {
+            System.out.print(prompt);
+            try {
+                return Integer.parseInt(scanner.nextLine());
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid input. Please enter a valid number.");
+            }
+        }
+    }
+    private static TypeConsommation getTypeConsommationFromInput(Scanner scanner) {
+        System.out.println("Select consumption type:");
+        TypeConsommation[] types = TypeConsommation.values();
+        for (int i = 0; i < types.length; i++) {
+            System.out.println((i + 1) + ". " + types[i].name());
+        }
+
+        int choice = getValidIntegerInput(scanner, "Enter the number corresponding to the consumption type: ");
+        if (choice < 1 || choice > types.length) {
+            System.out.println("Invalid choice. Please try again.");
+            return getTypeConsommationFromInput(scanner);
+        }
+        return types[choice - 1];
+    }
+    private static EnergyType getEnergyTypeFromInput(Scanner scanner) {
+        System.out.println("Select energy type:");
+        EnergyType[] energyTypes = EnergyType.values();
+        for (int i = 0; i < energyTypes.length; i++) {
+            System.out.println((i + 1) + ". " + energyTypes[i].name());
+        }
+
+        int choice = getValidIntegerInput(scanner, "Enter the number corresponding to the energy type: ");
+        if (choice < 1 || choice > energyTypes.length) {
+            System.out.println("Invalid choice. Please try again.");
+            return getEnergyTypeFromInput(scanner); // Recursive retry
+        }
+        return energyTypes[choice - 1];
+    }
+    private static VehicleType getVehicleTypeFromInput(Scanner scanner) {
+        System.out.println("Select vehicle type:");
+        VehicleType[] vehicleTypes = VehicleType.values();
+        for (int i = 0; i < vehicleTypes.length; i++) {
+            System.out.println((i + 1) + ". " + vehicleTypes[i].name());
+        }
+
+        int choice = getValidIntegerInput(scanner, "Enter the number corresponding to the vehicle type: ");
+        if (choice < 1 || choice > vehicleTypes.length) {
+            System.out.println("Invalid choice. Please try again.");
+            return getVehicleTypeFromInput(scanner); // Recursive retry
+        }
+        return vehicleTypes[choice - 1];
+    }
+    private static FoodType getFoodTypeFromInput(Scanner scanner) {
+        System.out.println("Select food type:");
+        FoodType[] foodTypes = FoodType.values();
+        for (int i = 0; i < foodTypes.length; i++) {
+            System.out.println((i + 1) + ". " + foodTypes[i].name());
+        }
+
+        int choice = getValidIntegerInput(scanner, "Enter the number corresponding to the food type: ");
+        if (choice < 1 || choice > foodTypes.length) {
+            System.out.println("Invalid choice. Please try again.");
+            return getFoodTypeFromInput(scanner); // Recursive retry
+        }
+        return foodTypes[choice - 1];
+    }
+    /* Validation methods end*/
 
 }

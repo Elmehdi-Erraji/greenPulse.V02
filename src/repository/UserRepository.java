@@ -54,7 +54,37 @@ public class UserRepository {
         return null;
     }
 
+    public void updateUser(User user) throws SQLException {
+        String sql = "UPDATE users SET name = ?, age = ? WHERE id = ?";
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, user.getName());
+            statement.setInt(2, user.getAge());
+            statement.setInt(3, user.getId());
+            statement.executeUpdate();
+        }
+    }
 
+    public void deleteUser(int id) throws SQLException {
+        String sql = "DELETE FROM users WHERE id = ?";
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, id);
+            statement.executeUpdate();
+        }
+    }
+
+    public boolean isUserExist(int userId) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM users WHERE id = ?";
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, userId);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    return resultSet.getInt(1) > 0;
+                }
+            }
+        }
+        return false;
+    }
+    
     public List<User> getAllUsers() throws SQLException {
         List<User> users = new ArrayList<>();
         String userSql = "SELECT * FROM users";
@@ -127,125 +157,5 @@ public class UserRepository {
         return users;
     }
 
-
-    public void updateUser(User user) throws SQLException {
-        String sql = "UPDATE users SET name = ?, age = ? WHERE id = ?";
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setString(1, user.getName());
-            statement.setInt(2, user.getAge());
-            statement.setInt(3, user.getId());
-            statement.executeUpdate();
-        }
-    }
-
-    public void deleteUser(int id) throws SQLException {
-        String sql = "DELETE FROM users WHERE id = ?";
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setInt(1, id);
-            statement.executeUpdate();
-        }
-    }
-
-    public boolean isUserExist(int userId) throws SQLException {
-        String sql = "SELECT COUNT(*) FROM users WHERE id = ?";
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setInt(1, userId);
-            try (ResultSet resultSet = statement.executeQuery()) {
-                if (resultSet.next()) {
-                    return resultSet.getInt(1) > 0;
-                }
-            }
-        }
-        return false;
-    }
-
-    public Set<User> getInactiveUsers(LocalDate startDate, LocalDate endDate) throws SQLException {
-        Set<User> inactiveUsers = new HashSet<>();
-        String sql = "SELECT u.id, u.name " +
-                "FROM users u " +
-                "LEFT JOIN carbonrecords cr ON u.id = cr.user_id " +
-                "GROUP BY u.id, u.name " +
-                "HAVING SUM(" +
-                "    CASE " +
-                "        WHEN cr.start_date IS NULL OR cr.end_date IS NULL THEN 0 " +
-                "        WHEN cr.start_date <= ? AND cr.end_date >= ? THEN 1 " +
-                "        ELSE 0 " +
-                "    END" +
-                ") = 0";
-
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setDate(1, java.sql.Date.valueOf(endDate));
-            statement.setDate(2, java.sql.Date.valueOf(startDate));
-            try (ResultSet resultSet = statement.executeQuery()) {
-                while (resultSet.next()) {
-                    int id = resultSet.getInt("id");
-                    String name = resultSet.getString("name");
-                    inactiveUsers.add(new User(id, name, 0)); // Assuming age is not needed
-                }
-            }
-        }
-        return inactiveUsers;
-    }
-
-
-
-    public List<User> getAllUsersWithDetails(LocalDate startDate, LocalDate endDate) throws SQLException {
-        List<User> users = new ArrayList<>();
-        String sql = "SELECT u.id, u.name, u.age, cr.id AS record_id, cr.impact_value " +
-                "FROM users u " +
-                "LEFT JOIN carbonrecords cr ON u.id = cr.user_id " +
-                "WHERE cr.start_date >= ? AND cr.end_date <= ?";
-
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setDate(1, java.sql.Date.valueOf(startDate));
-            statement.setDate(2, java.sql.Date.valueOf(endDate));
-
-            try (ResultSet resultSet = statement.executeQuery()) {
-                while (resultSet.next()) {
-                    int userId = resultSet.getInt("id");
-                    String name = resultSet.getString("name");
-                    int age = resultSet.getInt("age");
-                    double impactValue = resultSet.getDouble("impact_value");
-
-                    User user = users.stream()
-                            .filter(u -> u.getId() == userId)
-                            .findFirst()
-                            .orElseGet(() -> {
-                                User newUser = new User(userId, name, age);
-                                users.add(newUser);
-                                return newUser;
-                            });
-
-                    // Add the impact value to the user (assuming `User` class has a method to add impact records)
-                    user.addImpactValue(impactValue); // Adjust this line according to your `User` class
-                }
-            }
-        }
-
-        return users;
-    }
-    // Gets the total carbon impact for a user
-    public double getTotalImpactForUser(int userId, LocalDate startDate, LocalDate endDate) throws SQLException {
-        double totalImpact = 0.0;
-        String sql = "SELECT COALESCE(SUM(cr.impact_value), 0) AS total_impact " +
-                "FROM carbonrecords cr " +
-                "WHERE cr.user_id = ? AND cr.start_date >= ? AND cr.end_date <= ?";
-
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setInt(1, userId);
-            statement.setDate(2, java.sql.Date.valueOf(startDate));
-            statement.setDate(3, java.sql.Date.valueOf(endDate));
-
-            try (ResultSet resultSet = statement.executeQuery()) {
-                if (resultSet.next()) {
-                    totalImpact = resultSet.getDouble("total_impact");
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace(); // Handle the exception
-        }
-
-        return totalImpact;
-    }
 
 }
