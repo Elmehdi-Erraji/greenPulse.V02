@@ -392,28 +392,24 @@ public class MenuManager {
         // Prompt user to enter the user ID
         int userId = getValidIntegerInput(scanner, "Enter User ID for the report: ");
 
-        // Prompt user to enter the period type (1 for daily, 2 for weekly, 3 for monthly)
-        System.out.println("Enter period type (1 for daily, 2 for weekly, 3 for monthly): ");
-        int periodType = getValidIntegerInput(scanner, "Period type: ");
+        // Prompt user for the report type
+        System.out.println("Choose report type (1 for daily, 2 for weekly, 3 for monthly): ");
+        int periodType = getValidIntegerInput(scanner, "Enter report type: ");
 
+        // Validate the report type
         if (periodType < 1 || periodType > 3) {
-            System.out.println("Invalid period type. Please enter 1 for daily, 2 for weekly, or 3 for monthly.");
+            System.out.println("Invalid report type. Please enter 1 for daily, 2 for weekly, or 3 for monthly.");
             return;
         }
 
-        // Prompt user for the start and end dates
-        LocalDate startDate = getValidDateInput(scanner, "Enter start date (YYYY-MM-DD): ");
-        LocalDate endDate = getValidDateInput(scanner, "Enter end date (YYYY-MM-DD): ");
+        // Prompt user for the start date
+        LocalDate startDate = getValidDateInput(scanner, "Enter start date (yyyy-MM-dd): ");
 
-        // Ensure the end date is after the start date
-        if (endDate.isBefore(startDate)) {
-            System.out.println("End date must be after the start date.");
-            return;
-        }
+        // Prompt user for the end date
+        LocalDate endDate = getValidDateInput(scanner, "Enter end date (yyyy-MM-dd): ");
 
         try {
 
-            // Generate the report for the specified user and date range
             userService.generateConsumptionReport(userId, periodType, startDate, endDate);
 
         } catch (SQLException e) {
