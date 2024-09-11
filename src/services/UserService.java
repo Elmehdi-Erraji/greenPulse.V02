@@ -10,6 +10,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.time.temporal.WeekFields;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -149,5 +150,87 @@ public class UserService {
         return sortedUsers;
     }
 
+    public void generateConsumptionReport(int userId, int periodType, LocalDate startDate, LocalDate endDate) throws SQLException {
+
+        User user = userRepository.getUserRecordsById(userId);
+
+        if (user == null) {
+            System.out.println("User with ID " + userId + " not found.");
+            return;
+        }
+
+        List<CarbonRecord> records = user.getCarbonRecords();
+
+        if (records == null || records.isEmpty()) {
+            System.out.println("No carbon consumption records available for user " + user.getName());
+            return;
+        }
+
+        // Filter records based on date range
+        List<CarbonRecord> filteredRecords = records.stream()
+                .filter(record -> {
+                    LocalDate recordDate = record.getStartDate();
+                    return !recordDate.isBefore(startDate) && !recordDate.isAfter(endDate);
+                })
+                .collect(Collectors.toList());
+
+        if (filteredRecords.isEmpty()) {
+            System.out.println("No carbon consumption records available in the specified date range.");
+            return;
+        }
+
+        // Generate the report based on the period type
+        switch (periodType) {
+            case 1:  // Daily
+                generateDailyReport(filteredRecords);
+                break;
+            case 2:  // Weekly
+                generateWeeklyReport(filteredRecords);
+                break;
+            case 3:  // Monthly
+                generateMonthlyReport(filteredRecords);
+                break;
+            default:
+                System.out.println("Invalid period type.");
+        }
+    }
+
+    private void generateDailyReport(List<CarbonRecord> records) {
+        System.out.println("Daily Report for " + records.size() + " records:");
+        // Group records by date and output daily consumption
+        records.stream()
+                .collect(Collectors.groupingBy(record -> record.getStartDate()))
+                .forEach((date, dailyRecords) -> {
+                    System.out.println("Date: " + date);
+                    dailyRecords.forEach(record -> System.out.println(record));  // Customize this based on your CarbonRecord's toString() method
+                });
+    }
+
+    private void generateWeeklyReport(List<CarbonRecord> records) {
+        System.out.println("Weekly Report for " + records.size() + " records:");
+        // Group records by week and output weekly consumption
+        records.stream()
+                .collect(Collectors.groupingBy(record -> getWeekOfYear(record.getStartDate())))
+                .forEach((week, weeklyRecords) -> {
+                    System.out.println("Week: " + week);
+                    weeklyRecords.forEach(record -> System.out.println(record));  // Customize this based on your CarbonRecord's toString() method
+                });
+    }
+
+    private void generateMonthlyReport(List<CarbonRecord> records) {
+        System.out.println("Monthly Report for " + records.size() + " records:");
+        // Group records by month and output monthly consumption
+        records.stream()
+                .collect(Collectors.groupingBy(record -> record.getStartDate().getMonth()))
+                .forEach((month, monthlyRecords) -> {
+                    System.out.println("Month: " + month);
+                    monthlyRecords.forEach(record -> System.out.println(record));  // Customize this based on your CarbonRecord's toString() method
+                });
+    }
+
+    private int getWeekOfYear(LocalDate date) {
+        // This method returns the week number of the year for a given date
+        return date.get(WeekFields.of(Locale.getDefault()).weekOfYear());
+    }
 
 }

@@ -115,7 +115,8 @@ public class MenuManager {
             System.out.println("1. Add Carbon Record");
             System.out.println("2. View Carbon Records");
             System.out.println("3. Delete Carbon Record");
-            System.out.println("4. Go Back");
+            System.out.println("4. Generate Consumption Report");  // New option for generating a report
+            System.out.println("5. Go Back");
 
             int choice = getValidIntegerInput(scanner, "Enter your choice: ");
 
@@ -130,6 +131,9 @@ public class MenuManager {
                     deleteCarbonRecord(scanner);
                     break;
                 case 4:
+                    generateCarbonConsumptionReport(scanner);  // New case for generating report
+                    break;
+                case 5:
                     return;
                 default:
                     System.out.println("Invalid choice. Please try again.");
@@ -381,6 +385,43 @@ public class MenuManager {
             System.out.println("Error retrieving carbon records: " + e.getMessage());
         }
     }
+
+    private static void generateCarbonConsumptionReport(Scanner scanner) {
+        System.out.println("\n=== Generate Carbon Consumption Report ===");
+
+        // Prompt user to enter the user ID
+        int userId = getValidIntegerInput(scanner, "Enter User ID for the report: ");
+
+        // Prompt user to enter the period type (1 for daily, 2 for weekly, 3 for monthly)
+        System.out.println("Enter period type (1 for daily, 2 for weekly, 3 for monthly): ");
+        int periodType = getValidIntegerInput(scanner, "Period type: ");
+
+        if (periodType < 1 || periodType > 3) {
+            System.out.println("Invalid period type. Please enter 1 for daily, 2 for weekly, or 3 for monthly.");
+            return;
+        }
+
+        // Prompt user for the start and end dates
+        LocalDate startDate = getValidDateInput(scanner, "Enter start date (YYYY-MM-DD): ");
+        LocalDate endDate = getValidDateInput(scanner, "Enter end date (YYYY-MM-DD): ");
+
+        // Ensure the end date is after the start date
+        if (endDate.isBefore(startDate)) {
+            System.out.println("End date must be after the start date.");
+            return;
+        }
+
+        try {
+
+            // Generate the report for the specified user and date range
+            userService.generateConsumptionReport(userId, periodType, startDate, endDate);
+
+        } catch (SQLException e) {
+            System.out.println("Error generating the report: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
     /*CARBON management ends here*/
 
 }

@@ -9,10 +9,10 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 
+
 public class CarbonRecordService {
 
     private CarbonRecordRepository carbonRecordRepository;
-
     public CarbonRecordService(CarbonRecordRepository carbonRecordRepository) {
         this.carbonRecordRepository = carbonRecordRepository;
     }
@@ -114,4 +114,5 @@ public class CarbonRecordService {
             throw new IllegalArgumentException("Alimentation food weight must be greater than zero.");
         }
     }
+
 }
