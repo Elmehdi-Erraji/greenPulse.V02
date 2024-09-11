@@ -84,7 +84,7 @@ public class UserRepository {
         }
         return false;
     }
-    
+
     public List<User> getAllUsers() throws SQLException {
         List<User> users = new ArrayList<>();
         String userSql = "SELECT * FROM users";
