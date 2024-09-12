@@ -10,9 +10,11 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.time.temporal.IsoFields;
 import java.time.temporal.WeekFields;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class UserService {
     private UserRepository userRepository;
@@ -196,87 +198,83 @@ public class UserService {
     }
 
     private void generateDailyReport(List<CarbonRecord> records, LocalDate startDate, LocalDate endDate) {
-        Map<LocalDate, BigDecimal> dailyImpactMap = new TreeMap<>();
+        // Aggregate impact values per day
+        Map<LocalDate, Double> dailyImpact = records.stream()
+                .flatMap(record -> {
+                    LocalDate recordStartDate = record.getStartDate();
+                    LocalDate recordEndDate = record.getEndDate();
+                    if (recordStartDate != null && recordEndDate != null) {
+                        return recordStartDate.datesUntil(recordEndDate.plusDays(1))
+                                .filter(date -> !date.isBefore(startDate) && !date.isAfter(endDate))
+                                .map(date -> new AbstractMap.SimpleEntry<>(date, record.getImpactValue()));
+                    }
+                    return Stream.empty();
+                })
+                .collect(Collectors.groupingBy(
+                        Map.Entry::getKey,
+                        Collectors.summingDouble(Map.Entry::getValue)
+                ));
 
-        for (CarbonRecord record : records) {
-            if (record.getStartDate() == null || record.getEndDate() == null) continue;
-            LocalDate recordStartDate = record.getStartDate();
-            LocalDate recordEndDate = record.getEndDate();
-
-            // Adjust start date if it is before the given startDate
-            if (recordEndDate.isBefore(startDate) || recordStartDate.isAfter(endDate)) continue;
-
-            // Iterate through the record's date range
-            for (LocalDate date = recordStartDate; !date.isAfter(recordEndDate); date = date.plusDays(1)) {
-                if (date.isBefore(startDate) || date.isAfter(endDate)) continue;
-
-                // Accumulate impact values for each date
-                dailyImpactMap.merge(date, record.getAmount(), BigDecimal::add);
-            }
-        }
-
-        System.out.println("Daily Report from " + startDate + " to " + endDate + ":");
-        for (Map.Entry<LocalDate, BigDecimal> entry : dailyImpactMap.entrySet()) {
-            System.out.println("Date: " + entry.getKey() + ", Daily Impact: " + entry.getValue());
-        }
+        // Print daily impact values
+        System.out.println("Daily Report:");
+        dailyImpact.forEach((date, impact) ->
+                System.out.printf("Date: %s, Impact Value: %.2f%n", date, impact)
+        );
     }
 
     private void generateWeeklyReport(List<CarbonRecord> records, LocalDate startDate, LocalDate endDate) {
-        Map<LocalDate, BigDecimal> weeklyImpactMap = new TreeMap<>();
-        LocalDate startOfWeek = startDate.with(java.time.temporal.TemporalAdjusters.previousOrSame(java.time.DayOfWeek.MONDAY));
+        Map<Integer, Double> weeklyImpact = records.stream()
+                .flatMap(record -> {
+                    LocalDate recordStartDate = record.getStartDate();
+                    LocalDate recordEndDate = record.getEndDate();
+                    if (recordStartDate != null && recordEndDate != null) {
+                        return recordStartDate.datesUntil(recordEndDate.plusDays(1))
+                                .filter(date -> !date.isBefore(startDate) && !date.isAfter(endDate))
+                                .map(date -> new AbstractMap.SimpleEntry<>(getWeekOfYear(date), record.getImpactValue()));
+                    }
+                    return Stream.empty();
+                })
+                .collect(Collectors.groupingBy(
+                        Map.Entry::getKey,
+                        Collectors.summingDouble(Map.Entry::getValue)
+                ));
 
-        for (CarbonRecord record : records) {
-            if (record.getStartDate() == null || record.getEndDate() == null) continue;
-            LocalDate recordStartDate = record.getStartDate();
-            LocalDate recordEndDate = record.getEndDate();
-
-            if (recordEndDate.isBefore(startDate) || recordStartDate.isAfter(endDate)) continue;
-
-            for (LocalDate date = recordStartDate; !date.isAfter(recordEndDate); date = date.plusDays(1)) {
-                if (date.isBefore(startDate) || date.isAfter(endDate)) continue;
-
-                LocalDate weekStart = date.with(java.time.temporal.TemporalAdjusters.previousOrSame(java.time.DayOfWeek.MONDAY));
-                if (weekStart.isBefore(startOfWeek)) {
-                    weekStart = startOfWeek;
-                }
-
-                weeklyImpactMap.merge(weekStart, record.getAmount(), BigDecimal::add);
-            }
-        }
-
-        System.out.println("Weekly Report from " + startDate + " to " + endDate + ":");
-        for (Map.Entry<LocalDate, BigDecimal> entry : weeklyImpactMap.entrySet()) {
-            System.out.println("Week starting: " + entry.getKey() + ", Weekly Impact: " + entry.getValue());
-        }
+        // Print weekly impact values
+        System.out.println("Weekly Report:");
+        weeklyImpact.forEach((week, impact) ->
+                System.out.printf("Week: %d, Impact Value: %.2f%n", week, impact)
+        );
     }
 
+
     private void generateMonthlyReport(List<CarbonRecord> records, LocalDate startDate, LocalDate endDate) {
-        Map<LocalDate, BigDecimal> monthlyImpactMap = new TreeMap<>();
-        LocalDate firstDayOfMonth = startDate.withDayOfMonth(1);
+        // Aggregate impact values per month
+        Map<String, Double> monthlyImpact = records.stream()
+                .flatMap(record -> {
+                    LocalDate recordStartDate = record.getStartDate();
+                    LocalDate recordEndDate = record.getEndDate();
+                    if (recordStartDate != null && recordEndDate != null) {
+                        return recordStartDate.datesUntil(recordEndDate.plusDays(1))
+                                .filter(date -> !date.isBefore(startDate) && !date.isAfter(endDate))
+                                .map(date -> new AbstractMap.SimpleEntry<>(getMonthYear(date), record.getImpactValue()));
+                    }
+                    return Stream.empty();
+                })
+                .collect(Collectors.groupingBy(
+                        Map.Entry::getKey,
+                        Collectors.summingDouble(Map.Entry::getValue)
+                ));
 
-        for (CarbonRecord record : records) {
-            if (record.getStartDate() == null || record.getEndDate() == null) continue;
-            LocalDate recordStartDate = record.getStartDate();
-            LocalDate recordEndDate = record.getEndDate();
+        // Print monthly impact values
+        System.out.println("Monthly Report:");
+        monthlyImpact.forEach((monthYear, impact) ->
+                System.out.printf("Month: %s, Impact Value: %.2f%n", monthYear, impact)
+        );
+    }
 
-            if (recordEndDate.isBefore(startDate) || recordStartDate.isAfter(endDate)) continue;
-
-            for (LocalDate date = recordStartDate; !date.isAfter(recordEndDate); date = date.plusDays(1)) {
-                if (date.isBefore(startDate) || date.isAfter(endDate)) continue;
-
-                LocalDate monthStart = date.withDayOfMonth(1);
-                if (monthStart.isBefore(firstDayOfMonth)) {
-                    monthStart = firstDayOfMonth;
-                }
-
-                monthlyImpactMap.merge(monthStart, record.getAmount(), BigDecimal::add);
-            }
-        }
-
-        System.out.println("Monthly Report from " + startDate + " to " + endDate + ":");
-        for (Map.Entry<LocalDate, BigDecimal> entry : monthlyImpactMap.entrySet()) {
-            System.out.println("Month starting: " + entry.getKey() + ", Monthly Impact: " + entry.getValue());
-        }
+    // Helper method to get the month and year from a date
+    private String getMonthYear(LocalDate date) {
+        return String.format("%s %d", date.getMonth(), date.getYear());
     }
 
     private int getWeekOfYear(LocalDate date) {
