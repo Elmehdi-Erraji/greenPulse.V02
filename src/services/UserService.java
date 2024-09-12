@@ -106,7 +106,7 @@ public class UserService {
     }
 
     public List<User> sortUsersByTotalCarbonConsumption() throws SQLException {
-        List<User> users = userRepository.getAllUsers(); // Retrieve all users with their carbon records
+        List<User> users = userRepository.getAllUsers();
 
         List<User> sortedUsers = users.stream()
                 .map(user -> new User(user.getId(), user.getName(), user.getAge(), user.getCarbonRecords()) {
@@ -162,7 +162,6 @@ public class UserService {
             return;
         }
 
-        // Generate the report based on the report type
         switch (reportType) {
             case 1:
                 generateDailyReport(filteredRecords, startDate, endDate);
@@ -212,12 +211,13 @@ public class UserService {
                 .collect(Collectors.toList());
 
         Map<Integer, Double> weeklyImpact = filteredRecords.stream()
-                .flatMap(record -> record.getStartDate().datesUntil(record.getEndDate().plusDays(1))
-                        .filter(date -> !date.isBefore(startDate) && !date.isAfter(endDate))
-                        .map(date -> new AbstractMap.SimpleEntry<>(getWeekOfYear(date), record.getImpactValue())))
-                .collect(Collectors.groupingBy(
-                        Map.Entry::getKey,
-                        Collectors.summingDouble(Map.Entry::getValue)
+                .collect(Collectors.toMap(
+                        record -> getWeekOfYear(record.getStartDate()),
+                        record -> record.getStartDate().datesUntil(record.getEndDate().plusDays(1))
+                                .filter(date -> !date.isBefore(startDate) && !date.isAfter(endDate))
+                                .mapToDouble(date -> record.getImpactValue())
+                                .sum(),
+                        Double::sum
                 ));
 
         long totalDays = ChronoUnit.DAYS.between(startDate, endDate) + 1;
@@ -244,14 +244,14 @@ public class UserService {
                 .collect(Collectors.toList());
 
         Map<String, Double> monthlyImpact = filteredRecords.stream()
-                .flatMap(record -> record.getStartDate().datesUntil(record.getEndDate().plusDays(1))
-                        .filter(date -> !date.isBefore(startDate) && !date.isAfter(endDate))
-                        .map(date -> new AbstractMap.SimpleEntry<>(getMonthYear(date), record.getImpactValue())))
-                .collect(Collectors.groupingBy(
-                        Map.Entry::getKey,
-                        Collectors.summingDouble(Map.Entry::getValue)
+                .collect(Collectors.toMap(
+                        record -> getMonthYear(record.getStartDate()),
+                        record -> record.getStartDate().datesUntil(record.getEndDate().plusDays(1))
+                                .filter(date -> !date.isBefore(startDate) && !date.isAfter(endDate))
+                                .mapToDouble(date -> record.getImpactValue())
+                                .sum(),
+                        Double::sum
                 ));
-
         int totalMonths = (endDate.getYear() - startDate.getYear()) * 12 + endDate.getMonthValue() - startDate.getMonthValue() + 1;
 
         double totalImpactValue = monthlyImpact.values().stream().mapToDouble(v -> v).sum();
