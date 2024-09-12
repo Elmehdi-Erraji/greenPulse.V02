@@ -273,12 +273,14 @@ public class MenuManager {
 
     /*USER management ends here*/
 
-
     /*CARBON management starts here*/
     private static void addCarbonRecord(Scanner scanner) throws SQLException {
         int userId = getValidIntegerInput(scanner, "Enter user ID: ");
 
-        if (!userService.isUserExist(userId)) {
+        // Check if the user exists
+        Optional<Boolean> userExistsOptional = userService.isUserExist(userId);
+
+        if (userExistsOptional.isEmpty() || !userExistsOptional.get()) {
             System.out.println("User ID does not exist. Please enter a valid User ID.");
             return;
         }
@@ -286,6 +288,7 @@ public class MenuManager {
         System.out.println("Select consumption type:");
         TypeConsommation type = getTypeConsommationFromInput(scanner);
 
+        // Handle different types of consumption records
         switch (type) {
             case LOGEMENT:
                 addLogementRecord(scanner, userId);
@@ -347,12 +350,8 @@ public class MenuManager {
         String confirmation = scanner.nextLine();
 
         if (confirmation.equalsIgnoreCase("yes")) {
-            try {
-                carbonRecordService.deleteCarbonRecord(recordId);
-                System.out.println("Carbon record deleted successfully.");
-            } catch (SQLException e) {
-                System.out.println("Error deleting carbon record: " + e.getMessage());
-            }
+            carbonRecordService.deleteCarbonRecord(recordId);
+            System.out.println("Carbon record deleted successfully.");
         } else {
             System.out.println("Delete operation cancelled.");
         }
@@ -364,27 +363,31 @@ public class MenuManager {
         int userId = getValidIntegerInput(scanner, "Enter user ID: ");
 
         try {
-            List<Map<String, Object>> records = carbonRecordService.getAllRecordsByUserId(userId);
-            if (records.isEmpty()) {
-                System.out.println("No carbon records found for this user.");
-                return;
-            }
+            Optional<List<Map<String, Object>>> optionalRecords = carbonRecordService.getAllRecordsByUserId(userId);
 
+            // Handle the Optional<List<Map<String, Object>>> safely
+            List<Map<String, Object>> records = optionalRecords.orElseThrow(() ->
+                    new NoSuchElementException("No carbon records found for this user.")
+            );
+
+            // Sort and process the records
             records.stream()
-                    .sorted(Comparator.comparing(record -> (String) record.get("type")))
+                    .sorted(Comparator.comparing(record -> (String) record.getOrDefault("type", ""))) // Default to empty string if "type" is missing
                     .forEach(record -> {
-                        int recordId = (Integer) record.get("id");
-                        LocalDate startDate = (LocalDate) record.get("start_date");
-                        LocalDate endDate = (LocalDate) record.get("end_date");
-                        BigDecimal amount = (BigDecimal) record.get("amount");
-                        String type = (String) record.get("type");
-                        BigDecimal impactValue = (BigDecimal) record.get("impact_value");
+                        int recordId = (Integer) record.getOrDefault("id", 0);
+                        LocalDate startDate = (LocalDate) record.getOrDefault("start_date", LocalDate.now());
+                        LocalDate endDate = (LocalDate) record.getOrDefault("end_date", LocalDate.now());
+                        BigDecimal amount = (BigDecimal) record.getOrDefault("amount", BigDecimal.ZERO);
+                        String type = (String) record.getOrDefault("type", "Unknown");
+                        BigDecimal impactValue = (BigDecimal) record.getOrDefault("impact_value", BigDecimal.ZERO);
 
-                        System.out.printf("Record ID: %d, Type: %s, Start Date: %s, End Date: %s, Amount: %s, Impact Value: %s\n",
+                        System.out.printf("Record ID: %d, Type: %s, Start Date: %s, End Date: %s, Amount: %s, Impact Value: %s%n",
                                 recordId, type, startDate, endDate, amount, impactValue);
                     });
         } catch (SQLException e) {
             System.out.println("Error retrieving carbon records: " + e.getMessage());
+        } catch (NoSuchElementException e) {
+            System.out.println(e.getMessage());
         }
     }
 

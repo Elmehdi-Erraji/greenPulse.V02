@@ -4,14 +4,11 @@ import entities.CarbonRecord;
 import entities.User;
 import repository.UserRepository;
 
-import java.math.BigDecimal;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.time.temporal.IsoFields;
-import java.time.temporal.WeekFields;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -28,14 +25,26 @@ public class UserService {
         this.userRepository = new UserRepository(connection);
     }
 
-    public void createUser(User user) throws SQLException {
+    public boolean createUser(User user) throws SQLException {
         if (user == null) {
             throw new IllegalArgumentException("User cannot be null");
         }
-        userRepository.createUser(user);
+        return userRepository.createUser(user);
     }
 
-    public User getUserById(int id) throws SQLException {
+    public boolean updateUser(User user) throws SQLException {
+        if (user == null || user.getId() <= 0) {
+            throw new IllegalArgumentException("User or User ID cannot be null or invalid");
+        }
+        return userRepository.updateUser(user);
+    }
+
+    public boolean deleteUser(int id) throws SQLException {
+        if (id <= 0) {
+            throw new IllegalArgumentException("Invalid user ID");
+        }
+        return userRepository.deleteUser(id);
+    }    public User getUserById(int id) throws SQLException {
         if (id <= 0) {
             throw new IllegalArgumentException("Invalid user ID");
         }
@@ -46,31 +55,14 @@ public class UserService {
         return userRepository.getAllUsers();
     }
 
-    public void updateUser(User user) throws SQLException {
-        if (user == null || user.getId() <= 0) {
-            throw new IllegalArgumentException("User or User ID cannot be null or invalid");
-        }
-        userRepository.updateUser(user);
-    }
 
-    public void deleteUser(int id) throws SQLException {
-        if (id <= 0) {
-            throw new IllegalArgumentException("Invalid user ID");
-        }
-        userRepository.deleteUser(id);
-    }
 
-    public boolean isUserExist(int userId) throws SQLException {
+    public Optional<Boolean> isUserExist(int userId) throws SQLException {
         if (userId <= 0) {
             throw new IllegalArgumentException("Invalid user ID");
         }
-        return userRepository.isUserExist(userId);
+        return Optional.of(userRepository.isUserExist (userId)); // Assuming this returns a User or null
     }
-
-    public UserService(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
-
 
     public Set<User> getInactiveUsers(LocalDate startDate, LocalDate endDate) throws SQLException {
         List<User> users = userRepository.getAllUsers(); // Get all users with their carbon records
@@ -81,7 +73,6 @@ public class UserService {
                 ))
                 .collect(Collectors.toSet());
     }
-
 
     public Map<User, Double> filterUsersByTotalConsumption(double threshold) throws SQLException {
         List<User> users = userRepository.getAllUsers(); // Get the list of users with their carbon records
@@ -144,7 +135,8 @@ public class UserService {
         return sortedUsers;
     }
 
-    public void generateConsumptionReport(int userId, int periodType, LocalDate startDate, LocalDate endDate) throws SQLException {
+
+    public void generateConsumptionReport(int userId, int reportType, LocalDate startDate, LocalDate endDate) throws SQLException {
 
         User user = userRepository.getUserRecordsById(userId);
 
@@ -160,7 +152,6 @@ public class UserService {
             return;
         }
 
-        // Filter records based on date range
         List<CarbonRecord> filteredRecords = records.stream()
                 .filter(record -> {
                     LocalDate recordDate = record.getStartDate();
@@ -173,104 +164,136 @@ public class UserService {
             return;
         }
 
-        // Generate the report based on the period type
-        switch (periodType) {
-            case 1: // Daily
-                generateDailyReport(records, startDate, endDate);
+        // Generate the report based on the report type
+        switch (reportType) {
+            case 1:
+                generateDailyReport(filteredRecords, startDate, endDate);
                 break;
-            case 2: // Weekly
-                generateWeeklyReport(records, startDate, endDate);
+            case 2:
+                generateWeeklyReport(filteredRecords, startDate, endDate);
                 break;
-            case 3: // Monthly
-                generateMonthlyReport(records, startDate, endDate);
+            case 3:
+                generateMonthlyReport(filteredRecords, startDate, endDate);
                 break;
             default:
-                System.out.println("Invalid period type.");
+                System.out.println("Invalid report type.");
         }
     }
 
+
     private void generateDailyReport(List<CarbonRecord> records, LocalDate startDate, LocalDate endDate) {
-        // Aggregate impact values per day
-        Map<LocalDate, Double> dailyImpact = records.stream()
+        // Calculate the total number of days in the period
+        long totalDays = ChronoUnit.DAYS.between(startDate, endDate) + 1;
+
+        // Filter records within the specified period and calculate total impact
+        double totalImpactValue = records.stream()
                 .flatMap(record -> {
                     LocalDate recordStartDate = record.getStartDate();
                     LocalDate recordEndDate = record.getEndDate();
-                    if (recordStartDate != null && recordEndDate != null) {
-                        return recordStartDate.datesUntil(recordEndDate.plusDays(1))
-                                .filter(date -> !date.isBefore(startDate) && !date.isAfter(endDate))
-                                .map(date -> new AbstractMap.SimpleEntry<>(date, record.getImpactValue()));
+
+                    // Ensure the record's dates are within the overall period
+                    LocalDate effectiveStartDate = !recordStartDate.isBefore(startDate) ? recordStartDate : startDate;
+                    LocalDate effectiveEndDate = !recordEndDate.isAfter(endDate) ? recordEndDate : endDate;
+
+                    // Check if there's any overlap
+                    if (effectiveStartDate.isBefore(effectiveEndDate) || effectiveStartDate.isEqual(effectiveEndDate)) {
+                        long daysInRecordPeriod = ChronoUnit.DAYS.between(effectiveStartDate, effectiveEndDate) + 1;
+                        return Stream.of(totalDays > 0 ? (record.getImpactValue() * (double) daysInRecordPeriod / totalDays) : 0);
                     }
                     return Stream.empty();
                 })
-                .collect(Collectors.groupingBy(
-                        Map.Entry::getKey,
-                        Collectors.summingDouble(Map.Entry::getValue)
-                ));
+                .reduce(0.0, Double::sum);
 
-        // Print daily impact values
-        System.out.println("Daily Report:");
-        dailyImpact.forEach((date, impact) ->
-                System.out.printf("Date: %s, Impact Value: %.2f%n", date, impact)
-        );
+        // Calculate and print the average impact value per day
+        double averageImpactPerDay = totalImpactValue / totalDays;
+        System.out.printf("Daily Report: Average Impact Value per Day: %.2f%n", averageImpactPerDay);
     }
 
     private void generateWeeklyReport(List<CarbonRecord> records, LocalDate startDate, LocalDate endDate) {
-        Map<Integer, Double> weeklyImpact = records.stream()
-                .flatMap(record -> {
+        List<CarbonRecord> filteredRecords = records.stream()
+                .filter(record -> {
                     LocalDate recordStartDate = record.getStartDate();
                     LocalDate recordEndDate = record.getEndDate();
-                    if (recordStartDate != null && recordEndDate != null) {
-                        return recordStartDate.datesUntil(recordEndDate.plusDays(1))
-                                .filter(date -> !date.isBefore(startDate) && !date.isAfter(endDate))
-                                .map(date -> new AbstractMap.SimpleEntry<>(getWeekOfYear(date), record.getImpactValue()));
-                    }
-                    return Stream.empty();
+                    return !recordEndDate.isBefore(startDate) && !recordStartDate.isAfter(endDate);
                 })
+                .collect(Collectors.toList());
+
+        // Group by week of the year and calculate total impact value for each week
+        Map<Integer, Double> weeklyImpact = filteredRecords.stream()
+                .flatMap(record -> record.getStartDate().datesUntil(record.getEndDate().plusDays(1))
+                        .filter(date -> !date.isBefore(startDate) && !date.isAfter(endDate))
+                        .map(date -> new AbstractMap.SimpleEntry<>(getWeekOfYear(date), record.getImpactValue())))
                 .collect(Collectors.groupingBy(
                         Map.Entry::getKey,
                         Collectors.summingDouble(Map.Entry::getValue)
                 ));
 
-        // Print weekly impact values
-        System.out.println("Weekly Report:");
+        // Calculate the total number of weeks in the period
+        long totalDays = ChronoUnit.DAYS.between(startDate, endDate) + 1;
+        long totalWeeks = totalDays / 7 + (totalDays % 7 == 0 ? 0 : 1);
+
+        // Calculate and print the average impact value per week
+        double totalImpactValue = weeklyImpact.values().stream().mapToDouble(v -> v).sum();
+        double averageImpactValuePerWeek = totalImpactValue / totalWeeks;
+
+        System.out.printf("Weekly Report:%nTotal Impact Value: %.2f%nAverage Impact Value per Week: %.2f%n", totalImpactValue, averageImpactValuePerWeek);
+
+        // Print the impact value for each week
+        System.out.println("Weekly Breakdown:");
         weeklyImpact.forEach((week, impact) ->
-                System.out.printf("Week: %d, Impact Value: %.2f%n", week, impact)
+                System.out.printf("Week %d: Total Impact Value: %.2f%n", week, impact)
         );
     }
-
 
     private void generateMonthlyReport(List<CarbonRecord> records, LocalDate startDate, LocalDate endDate) {
-        // Aggregate impact values per month
-        Map<String, Double> monthlyImpact = records.stream()
-                .flatMap(record -> {
+        // Filter records within the given date range
+        List<CarbonRecord> filteredRecords = records.stream()
+                .filter(record -> {
                     LocalDate recordStartDate = record.getStartDate();
                     LocalDate recordEndDate = record.getEndDate();
-                    if (recordStartDate != null && recordEndDate != null) {
-                        return recordStartDate.datesUntil(recordEndDate.plusDays(1))
-                                .filter(date -> !date.isBefore(startDate) && !date.isAfter(endDate))
-                                .map(date -> new AbstractMap.SimpleEntry<>(getMonthYear(date), record.getImpactValue()));
-                    }
-                    return Stream.empty();
+                    return !recordEndDate.isBefore(startDate) && !recordStartDate.isAfter(endDate);
                 })
+                .collect(Collectors.toList());
+
+        // Group by month and calculate total impact value for each month
+        Map<String, Double> monthlyImpact = filteredRecords.stream()
+                .flatMap(record -> record.getStartDate().datesUntil(record.getEndDate().plusDays(1))
+                        .filter(date -> !date.isBefore(startDate) && !date.isAfter(endDate))
+                        .map(date -> new AbstractMap.SimpleEntry<>(getMonthYear(date), record.getImpactValue())))
                 .collect(Collectors.groupingBy(
                         Map.Entry::getKey,
                         Collectors.summingDouble(Map.Entry::getValue)
                 ));
 
-        // Print monthly impact values
-        System.out.println("Monthly Report:");
+        // Calculate the total number of months in the period
+        int totalMonths = (endDate.getYear() - startDate.getYear()) * 12 + endDate.getMonthValue() - startDate.getMonthValue() + 1;
+
+        // Calculate and print the average impact value per month
+        double totalImpactValue = monthlyImpact.values().stream().mapToDouble(v -> v).sum();
+        double averageImpactValuePerMonth = totalImpactValue / totalMonths;
+
+        System.out.printf("Monthly Report:%nTotal Impact Value: %.2f%nAverage Impact Value per Month: %.2f%n", totalImpactValue, averageImpactValuePerMonth);
+
+        // Print the impact value for each month
+        System.out.println("Monthly Breakdown:");
         monthlyImpact.forEach((monthYear, impact) ->
-                System.out.printf("Month: %s, Impact Value: %.2f%n", monthYear, impact)
+                System.out.printf("%s: Total Impact Value: %.2f%n", monthYear, impact)
         );
     }
 
-    // Helper method to get the month and year from a date
-    private String getMonthYear(LocalDate date) {
-        return String.format("%s %d", date.getMonth(), date.getYear());
+    // Helper methods
+    private int getWeekOfYear(LocalDate date) {
+        return date.get(IsoFields.WEEK_OF_WEEK_BASED_YEAR);
     }
 
-    private int getWeekOfYear(LocalDate date) {
-        return date.get(WeekFields.of(Locale.getDefault()).weekOfYear());
+    private String getMonthYear(LocalDate date) {
+        return date.getMonth().name() + " " + date.getYear();
     }
+
+
+
+
+
+
 
 }

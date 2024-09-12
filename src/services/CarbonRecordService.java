@@ -8,111 +8,110 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 
 public class CarbonRecordService {
 
     private CarbonRecordRepository carbonRecordRepository;
+
     public CarbonRecordService(CarbonRecordRepository carbonRecordRepository) {
         this.carbonRecordRepository = carbonRecordRepository;
     }
 
-    public void addLogementRecord(Logement logement) throws SQLException {
+    public Optional<Boolean> addLogementRecord(Logement logement) {
         if (logement == null) {
             throw new IllegalArgumentException("Logement record cannot be null.");
         }
 
         validateLogement(logement);
 
-        try {
-            carbonRecordRepository.addLogementRecord(logement);
-        } catch (SQLException e) {
-            System.err.println("Error adding logement record: " + e.getMessage());
-            throw e;
-        }
+        carbonRecordRepository.addLogementRecord(logement);
+        return Optional.of(true); // Successfully added
     }
 
-    public void addTransportRecord(Transport transport) throws SQLException {
+    public Optional<Boolean> addTransportRecord(Transport transport) {
         if (transport == null) {
             throw new IllegalArgumentException("Transport record cannot be null.");
         }
 
         validateTransport(transport);
 
-        try {
-            carbonRecordRepository.addTransportRecord(transport);
-        } catch (SQLException e) {
-            System.err.println("Error adding transport record: " + e.getMessage());
-            throw e;
-        }
+        carbonRecordRepository.addTransportRecord(transport);
+        return Optional.of(true); // Successfully added
     }
 
-    public void addAlimentationRecord(Alimentation alimentation) throws SQLException {
+    public Optional<Boolean> addAlimentationRecord(Alimentation alimentation) {
         if (alimentation == null) {
             throw new IllegalArgumentException("Alimentation record cannot be null.");
         }
 
         validateAlimentation(alimentation);
 
-        try {
-            carbonRecordRepository.addAlimentationRecord(alimentation);
-        } catch (SQLException e) {
-            System.err.println("Error adding alimentation record: " + e.getMessage());
-            throw e;
-        }
+        carbonRecordRepository.addAlimentationRecord(alimentation);
+        return Optional.of(true); // Successfully added
     }
 
-    public void deleteCarbonRecord(int recordId) throws SQLException {
+    public Optional<Boolean> deleteCarbonRecord(int recordId) {
         if (recordId <= 0) {
             throw new IllegalArgumentException("Invalid record ID.");
         }
 
         try {
             carbonRecordRepository.deleteCarbonRecord(recordId);
+            return Optional.of(true); // Successfully deleted
         } catch (SQLException e) {
             System.err.println("Error deleting carbon record with ID " + recordId + ": " + e.getMessage());
-            throw e;
+            return Optional.empty(); // Indicating failure
         }
     }
 
-    public List<Map<String, Object>> getAllRecordsByUserId(int userId) throws SQLException {
-        return carbonRecordRepository.findAllByUserId(userId);
+    public Optional<List<Map<String, Object>>> getAllRecordsByUserId(int userId) throws SQLException {
+        if (userId <= 0) {
+            throw new IllegalArgumentException("Invalid user ID.");
+        }
+
+        List<Map<String, Object>> records = carbonRecordRepository.findAllByUserId(userId);
+        return records.isEmpty() ? Optional.empty() : Optional.of(records);
     }
 
-    private void validateLogement(Logement logement) {
+    private Optional<String> validateLogement(Logement logement) {
         if (logement.getStartDate() == null || logement.getEndDate() == null) {
-            throw new IllegalArgumentException("Logement dates cannot be null.");
+            return Optional.of("Logement dates cannot be null.");
         }
         if (logement.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Logement amount must be greater than zero.");
+            return Optional.of("Logement amount must be greater than zero.");
         }
         if (logement.getEnergyConsumption() <= 0) {
-            throw new IllegalArgumentException("Logement energy consumption must be greater than zero.");
+            return Optional.of("Logement energy consumption must be greater than zero.");
         }
+        return Optional.empty();
     }
 
-    private void validateTransport(Transport transport) {
+    private Optional<String> validateTransport(Transport transport) {
         if (transport.getStartDate() == null || transport.getEndDate() == null) {
-            throw new IllegalArgumentException("Transport dates cannot be null.");
+            return Optional.of("Transport dates cannot be null.");
         }
         if (transport.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Transport amount must be greater than zero.");
+            return Optional.of("Transport amount must be greater than zero.");
         }
         if (transport.getDistance() <= 0) {
-            throw new IllegalArgumentException("Transport distance must be greater than zero.");
+            return Optional.of("Transport distance must be greater than zero.");
         }
+        return Optional.empty();
     }
 
-    private void validateAlimentation(Alimentation alimentation) {
+    private Optional<String> validateAlimentation(Alimentation alimentation) {
         if (alimentation.getStartDate() == null || alimentation.getEndDate() == null) {
-            throw new IllegalArgumentException("Alimentation dates cannot be null.");
+            return Optional.of("Alimentation dates cannot be null.");
         }
         if (alimentation.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Alimentation amount must be greater than zero.");
+            return Optional.of("Alimentation amount must be greater than zero.");
         }
         if (alimentation.getFoodWeight() <= 0) {
-            throw new IllegalArgumentException("Alimentation food weight must be greater than zero.");
+            return Optional.of("Alimentation food weight must be greater than zero.");
         }
+        return Optional.empty();
     }
 
 }

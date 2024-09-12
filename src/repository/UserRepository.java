@@ -2,7 +2,6 @@ package repository;
 
 import java.math.BigDecimal;
 import java.sql.*;
-import java.sql.Date;
 import java.time.LocalDate;
 import java.util.*;
 
@@ -20,7 +19,7 @@ public class UserRepository {
         this.connection = connection;
     }
 
-    public void createUser(User user) throws SQLException {
+    public boolean createUser(User user) throws SQLException {
         String sql = "INSERT INTO users (name, age) VALUES (?, ?)";
         try (PreparedStatement statement = connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
             statement.setString(1, user.getName());
@@ -35,6 +34,7 @@ public class UserRepository {
                 }
             }
         }
+        return false;
     }
 
     public User getUserById(int id) throws SQLException {
@@ -54,7 +54,7 @@ public class UserRepository {
         return null;
     }
 
-    public void updateUser(User user) throws SQLException {
+    public boolean updateUser(User user) throws SQLException {
         String sql = "UPDATE users SET name = ?, age = ? WHERE id = ?";
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, user.getName());
@@ -62,14 +62,16 @@ public class UserRepository {
             statement.setInt(3, user.getId());
             statement.executeUpdate();
         }
+        return false;
     }
 
-    public void deleteUser(int id) throws SQLException {
+    public boolean deleteUser(int id) throws SQLException {
         String sql = "DELETE FROM users WHERE id = ?";
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setInt(1, id);
             statement.executeUpdate();
         }
+        return false;
     }
 
     public boolean isUserExist(int userId) throws SQLException {

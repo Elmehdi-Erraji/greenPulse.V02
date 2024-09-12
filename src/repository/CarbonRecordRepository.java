@@ -8,11 +8,9 @@ import entities.enums.VehicleType;
 
 import java.math.BigDecimal;
 import java.sql.*;
+import java.sql.Date;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class CarbonRecordRepository {
 
@@ -22,7 +20,7 @@ public class CarbonRecordRepository {
         this.connection = connection;
     }
 
-    public void addLogementRecord(Logement logement) throws SQLException {
+    public Optional<Integer> addLogementRecord(Logement logement) {
         String insertCarbonRecordSql = "INSERT INTO carbonrecords (start_date, end_date, amount, type, user_id, impact_value) " +
                 "VALUES (?, ?, ?, ?, ?, ?) RETURNING id";
         String insertLogementSql = "INSERT INTO logements (record_id, consommation_energie, type_energie) " +
@@ -31,86 +29,110 @@ public class CarbonRecordRepository {
         try {
             connection.setAutoCommit(false);
 
-            double impactValue = logement.getImpactValue();
-
+            // Insert carbon record
             try (PreparedStatement insertCarbonRecordStmt = connection.prepareStatement(insertCarbonRecordSql)) {
                 insertCarbonRecordStmt.setDate(1, Date.valueOf(logement.getStartDate()));
                 insertCarbonRecordStmt.setDate(2, Date.valueOf(logement.getEndDate()));
                 insertCarbonRecordStmt.setBigDecimal(3, logement.getAmount());
                 insertCarbonRecordStmt.setString(4, TypeConsommation.LOGEMENT.name());
                 insertCarbonRecordStmt.setInt(5, logement.getUserId());
-                insertCarbonRecordStmt.setDouble(6, impactValue);
+                insertCarbonRecordStmt.setDouble(6, logement.getImpactValue());
 
-                ResultSet generatedKeys = insertCarbonRecordStmt.executeQuery();
-                if (!generatedKeys.next()) {
-                    throw new SQLException("Failed to insert carbon record.");
-                }
-                int recordId = generatedKeys.getInt(1);
+                try (ResultSet generatedKeys = insertCarbonRecordStmt.executeQuery()) {
+                    if (generatedKeys.next()) {
+                        int recordId = generatedKeys.getInt(1);
 
-                try (PreparedStatement insertLogementStmt = connection.prepareStatement(insertLogementSql)) {
-                    insertLogementStmt.setInt(1, recordId);
-                    insertLogementStmt.setDouble(2, logement.getEnergyConsumption());
-                    insertLogementStmt.setString(3, logement.getEnergyType().name());
+                        // Insert logement record
+                        try (PreparedStatement insertLogementStmt = connection.prepareStatement(insertLogementSql)) {
+                            insertLogementStmt.setInt(1, recordId);
+                            insertLogementStmt.setDouble(2, logement.getEnergyConsumption());
+                            insertLogementStmt.setString(3, logement.getEnergyType().name());
+                            insertLogementStmt.executeUpdate();
+                        }
 
-                    insertLogementStmt.executeUpdate();
+                        connection.commit();
+                        return Optional.of(recordId);
+                    } else {
+                        connection.rollback();
+                        return Optional.empty();
+                    }
                 }
             }
-            connection.commit();
         } catch (SQLException e) {
-            connection.rollback();
+            try {
+                connection.rollback();
+            } catch (SQLException rollbackEx) {
+                System.err.println("Error rolling back transaction: " + rollbackEx.getMessage());
+            }
             System.err.println("Error adding logement record: " + e.getMessage());
-            throw e;
+            return Optional.empty();
         } finally {
-            connection.setAutoCommit(true);
+            try {
+                connection.setAutoCommit(true);
+            } catch (SQLException e) {
+                System.err.println("Error resetting auto-commit mode: " + e.getMessage());
+            }
         }
     }
 
-    public void addTransportRecord(Transport transport) throws SQLException {
+
+
+    public Optional<Integer> addTransportRecord(Transport transport) {
         String insertCarbonRecordSql = "INSERT INTO carbonrecords (start_date, end_date, amount, type, user_id, impact_value) " +
                 "VALUES (?, ?, ?, ?, ?, ?) RETURNING id";
         String insertTransportSql = "INSERT INTO transports (record_id, distance_parcourue, type_de_vehicule) " +
                 "VALUES (?, ?, ?)";
 
         try {
-            connection.setAutoCommit(false); // Begin transaction
+            connection.setAutoCommit(false);
 
-            // Calculate impact value using the method from the Transport subclass
-            double impactValue = transport.getImpactValue();
-
+            // Insert carbon record
             try (PreparedStatement insertCarbonRecordStmt = connection.prepareStatement(insertCarbonRecordSql)) {
                 insertCarbonRecordStmt.setDate(1, Date.valueOf(transport.getStartDate()));
                 insertCarbonRecordStmt.setDate(2, Date.valueOf(transport.getEndDate()));
                 insertCarbonRecordStmt.setBigDecimal(3, transport.getAmount());
                 insertCarbonRecordStmt.setString(4, TypeConsommation.TRANSPORT.name());
                 insertCarbonRecordStmt.setInt(5, transport.getUserId());
-                insertCarbonRecordStmt.setDouble(6, impactValue);
+                insertCarbonRecordStmt.setDouble(6, transport.getImpactValue());
 
-                ResultSet generatedKeys = insertCarbonRecordStmt.executeQuery();
-                if (!generatedKeys.next()) {
-                    throw new SQLException("Failed to insert carbon record.");
-                }
-                int recordId = generatedKeys.getInt(1);
+                try (ResultSet generatedKeys = insertCarbonRecordStmt.executeQuery()) {
+                    if (generatedKeys.next()) {
+                        int recordId = generatedKeys.getInt(1);
 
-                try (PreparedStatement insertTransportStmt = connection.prepareStatement(insertTransportSql)) {
-                    insertTransportStmt.setInt(1, recordId);
-                    insertTransportStmt.setDouble(2, transport.getDistance());
-                    insertTransportStmt.setString(3, transport.getVehicleType().name());
+                        // Insert transport record
+                        try (PreparedStatement insertTransportStmt = connection.prepareStatement(insertTransportSql)) {
+                            insertTransportStmt.setInt(1, recordId);
+                            insertTransportStmt.setDouble(2, transport.getDistance());
+                            insertTransportStmt.setString(3, transport.getVehicleType().name());
+                            insertTransportStmt.executeUpdate();
+                        }
 
-                    insertTransportStmt.executeUpdate();
+                        connection.commit();
+                        return Optional.of(recordId);
+                    } else {
+                        connection.rollback();
+                        return Optional.empty();
+                    }
                 }
             }
-
-            connection.commit(); // Commit transaction
         } catch (SQLException e) {
-            connection.rollback(); // Rollback transaction on error
+            try {
+                connection.rollback();
+            } catch (SQLException rollbackEx) {
+                System.err.println("Error rolling back transaction: " + rollbackEx.getMessage());
+            }
             System.err.println("Error adding transport record: " + e.getMessage());
-            throw e;
+            return Optional.empty();
         } finally {
-            connection.setAutoCommit(true); // Reset auto-commit mode
+            try {
+                connection.setAutoCommit(true);
+            } catch (SQLException e) {
+                System.err.println("Error resetting auto-commit mode: " + e.getMessage());
+            }
         }
     }
 
-    public void addAlimentationRecord(Alimentation alimentation) throws SQLException {
+    public Optional<Integer> addAlimentationRecord(Alimentation alimentation) {
         String insertCarbonRecordSql = "INSERT INTO carbonrecords (start_date, end_date, amount, type, user_id, impact_value) " +
                 "VALUES (?, ?, ?, ?, ?, ?) RETURNING id";
         String insertAlimentationSql = "INSERT INTO alimentations (record_id, type_aliment, poids) " +
@@ -119,38 +141,49 @@ public class CarbonRecordRepository {
         try {
             connection.setAutoCommit(false);
 
-            double impactValue = alimentation.getImpactValue();
-
+            // Insert carbon record
             try (PreparedStatement insertCarbonRecordStmt = connection.prepareStatement(insertCarbonRecordSql)) {
                 insertCarbonRecordStmt.setDate(1, Date.valueOf(alimentation.getStartDate()));
                 insertCarbonRecordStmt.setDate(2, Date.valueOf(alimentation.getEndDate()));
                 insertCarbonRecordStmt.setBigDecimal(3, alimentation.getAmount());
                 insertCarbonRecordStmt.setString(4, TypeConsommation.ALIMENTATION.name());
                 insertCarbonRecordStmt.setInt(5, alimentation.getUserId());
-                insertCarbonRecordStmt.setDouble(6, impactValue);
+                insertCarbonRecordStmt.setDouble(6, alimentation.getImpactValue());
 
-                ResultSet generatedKeys = insertCarbonRecordStmt.executeQuery();
-                if (!generatedKeys.next()) {
-                    throw new SQLException("Failed to insert carbon record.");
-                }
-                int recordId = generatedKeys.getInt(1);
+                try (ResultSet generatedKeys = insertCarbonRecordStmt.executeQuery()) {
+                    if (generatedKeys.next()) {
+                        int recordId = generatedKeys.getInt(1);
 
-                try (PreparedStatement insertAlimentationStmt = connection.prepareStatement(insertAlimentationSql)) {
-                    insertAlimentationStmt.setInt(1, recordId);
-                    insertAlimentationStmt.setString(2, alimentation.getFoodType().name());
-                    insertAlimentationStmt.setDouble(3, alimentation.getFoodWeight());
+                        // Insert alimentation record
+                        try (PreparedStatement insertAlimentationStmt = connection.prepareStatement(insertAlimentationSql)) {
+                            insertAlimentationStmt.setInt(1, recordId);
+                            insertAlimentationStmt.setString(2, alimentation.getFoodType().name());
+                            insertAlimentationStmt.setDouble(3, alimentation.getFoodWeight());
+                            insertAlimentationStmt.executeUpdate();
+                        }
 
-                    insertAlimentationStmt.executeUpdate();
+                        connection.commit();
+                        return Optional.of(recordId);
+                    } else {
+                        connection.rollback();
+                        return Optional.empty();
+                    }
                 }
             }
-
-            connection.commit();
         } catch (SQLException e) {
-            connection.rollback();
+            try {
+                connection.rollback();
+            } catch (SQLException rollbackEx) {
+                System.err.println("Error rolling back transaction: " + rollbackEx.getMessage());
+            }
             System.err.println("Error adding alimentation record: " + e.getMessage());
-            throw e;
+            return Optional.empty();
         } finally {
-            connection.setAutoCommit(true); // Reset auto-commit mode
+            try {
+                connection.setAutoCommit(true);
+            } catch (SQLException e) {
+                System.err.println("Error resetting auto-commit mode: " + e.getMessage());
+            }
         }
     }
 
