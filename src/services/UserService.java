@@ -83,26 +83,18 @@ public class UserService {
     }
 
 
-    public List<User> filterUsersByTotalConsumption(double threshold) throws SQLException {
+    public Map<User, Double> filterUsersByTotalConsumption(double threshold) throws SQLException {
         List<User> users = userRepository.getAllUsers(); // Get the list of users with their carbon records
 
         return users.stream()
-                .peek(user -> {
-                    // Calculate the total carbon consumption for each user
+                .map(user -> {
                     double totalConsumption = user.getCarbonRecords().stream()
                             .mapToDouble(CarbonRecord::getImpactValue)
                             .sum();
-
+                    return new AbstractMap.SimpleEntry<>(user, totalConsumption); // Create a key-value pair
                 })
-                .filter(user -> {
-                    double totalConsumption = user.getCarbonRecords().stream()
-                            .mapToDouble(CarbonRecord::getImpactValue)
-                            .sum();
-
-                    // Return true if the total consumption exceeds the threshold
-                    return totalConsumption > threshold;
-                })
-                .collect(Collectors.toList());
+                .filter(entry -> entry.getValue() > threshold) // Filter users based on total consumption
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)); // Collect into a Map<User, Double>
     }
 
     public double calculateAverageCarbonConsumption(LocalDate startDate, LocalDate endDate) throws SQLException {
