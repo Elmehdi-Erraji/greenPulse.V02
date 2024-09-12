@@ -75,8 +75,6 @@ public class CarbonRecordRepository {
         }
     }
 
-
-
     public Optional<Integer> addTransportRecord(Transport transport) {
         String insertCarbonRecordSql = "INSERT INTO carbonrecords (start_date, end_date, amount, type, user_id, impact_value) " +
                 "VALUES (?, ?, ?, ?, ?, ?) RETURNING id";
@@ -204,8 +202,6 @@ public class CarbonRecordRepository {
             throw e;
         }
     }
-
-
 
     public List<Map<String, Object>> findAllByUserId(int userId) throws SQLException {
         String sql = "SELECT id, start_date, end_date, amount, type, impact_value FROM carbonrecords WHERE user_id = ?";

@@ -269,15 +269,12 @@ public class MenuManager {
                     user.getId(), user.getName(), totalConsumption);
         }
     }
-
-
     /*USER management ends here*/
 
     /*CARBON management starts here*/
     private static void addCarbonRecord(Scanner scanner) throws SQLException {
         int userId = getValidIntegerInput(scanner, "Enter user ID: ");
 
-        // Check if the user exists
         Optional<Boolean> userExistsOptional = userService.isUserExist(userId);
 
         if (userExistsOptional.isEmpty() || !userExistsOptional.get()) {
@@ -288,7 +285,6 @@ public class MenuManager {
         System.out.println("Select consumption type:");
         TypeConsommation type = getTypeConsommationFromInput(scanner);
 
-        // Handle different types of consumption records
         switch (type) {
             case LOGEMENT:
                 addLogementRecord(scanner, userId);
@@ -306,8 +302,21 @@ public class MenuManager {
     }
 
     private static void addLogementRecord(Scanner scanner, int userId) throws SQLException {
-        LocalDate startDate = getValidDateInput(scanner, "Enter start date (yyyy-MM-dd): ");
-        LocalDate endDate = getValidDateInput(scanner, "Enter end date (yyyy-MM-dd): ");
+        LocalDate startDate;
+        LocalDate endDate;
+
+        // Loop to validate that the start date is before the end date
+        while (true) {
+            startDate = getValidDateInput(scanner, "Enter start date (yyyy-MM-dd): ");
+            endDate = getValidDateInput(scanner, "Enter end date (yyyy-MM-dd): ");
+
+            if (startDate.isBefore(endDate)) {
+                break; // Valid dates, exit the loop
+            } else {
+                System.out.println("Error: Start date must be before the end date. Please try again.");
+            }
+        }
+
         BigDecimal amount = getValidBigDecimalInput(scanner, "Enter amount: ");
         double energyConsumption = getValidDoubleInput(scanner, "Enter energy consumption: ");
         EnergyType energyType = getEnergyTypeFromInput(scanner);
@@ -318,8 +327,20 @@ public class MenuManager {
     }
 
     private static void addTransportRecord(Scanner scanner, int userId) throws SQLException {
-        LocalDate startDate = getValidDateInput(scanner, "Enter start date (yyyy-MM-dd): ");
-        LocalDate endDate = getValidDateInput(scanner, "Enter end date (yyyy-MM-dd): ");
+        LocalDate startDate;
+        LocalDate endDate;
+
+        while (true) {
+            startDate = getValidDateInput(scanner, "Enter start date (yyyy-MM-dd): ");
+            endDate = getValidDateInput(scanner, "Enter end date (yyyy-MM-dd): ");
+
+            if (startDate.isBefore(endDate)) {
+                break;
+            } else {
+                System.out.println("Error: Start date must be before the end date. Please try again.");
+            }
+        }
+
         BigDecimal amount = getValidBigDecimalInput(scanner, "Enter amount: ");
         double distance = getValidDoubleInput(scanner, "Enter distance: ");
         VehicleType vehicleType = getVehicleTypeFromInput(scanner);
@@ -330,8 +351,20 @@ public class MenuManager {
     }
 
     private static void addAlimentationRecord(Scanner scanner, int userId) throws SQLException {
-        LocalDate startDate = getValidDateInput(scanner, "Enter start date (yyyy-MM-dd): ");
-        LocalDate endDate = getValidDateInput(scanner, "Enter end date (yyyy-MM-dd): ");
+        LocalDate startDate;
+        LocalDate endDate;
+
+        while (true) {
+            startDate = getValidDateInput(scanner, "Enter start date (yyyy-MM-dd): ");
+            endDate = getValidDateInput(scanner, "Enter end date (yyyy-MM-dd): ");
+
+            if (startDate.isBefore(endDate)) {
+                break;
+            } else {
+                System.out.println("Error: Start date must be before the end date. Please try again.");
+            }
+        }
+
         BigDecimal amount = getValidBigDecimalInput(scanner, "Enter amount: ");
         double foodWeight = getValidDoubleInput(scanner, "Enter food weight: ");
         FoodType foodType = getFoodTypeFromInput(scanner);
