@@ -10,29 +10,20 @@ public class Database {
     private static final String USER = "GreenPulse";
     private static final String PASSWORD = "";
 
-    private static Database instance;
-    private Connection connection;
+    private static final Database INSTANCE = new Database();
 
-    private Database() throws SQLException {
+    private final Connection connection;
+
+    private Database() {
         try {
-            connection = DriverManager.getConnection(URL, USER, PASSWORD);
-            System.out.println("Connected to the PostgreSQL server successfully.");
-        } catch (SQLException e) {
-            throw new SQLException("Failed to connect to the PostgreSQL server.", e);
+            connection = DriverManager.getConnection(URL, USER , PASSWORD);
+        }catch (SQLException e) {
+            throw new RuntimeException("Failed to connect to database");
         }
     }
-
-    public static Database getInstance() throws SQLException {
-        if (instance == null) {
-            synchronized (Database.class) {
-                if (instance == null) {
-                    instance = new Database();
-                }
-            }
-        }
-        return instance;
+    public static Database getInstance() {
+        return INSTANCE;
     }
-
     public Connection getConnection() {
         return connection;
     }
@@ -40,5 +31,9 @@ public class Database {
     public void closeConnection() throws SQLException {
         connection.close();
     }
+
+
+
+
 
 }
