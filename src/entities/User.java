@@ -12,25 +12,25 @@ public class User {
     public User(String name, int age) {
         this.name = name;
         this.age = age;
-        this.carbonRecords = new ArrayList<>();  // Initialize the list
+        this.carbonRecords = new ArrayList<>();
     }
 
     public User(int id, String name, int age) {
         this.id = id;
         this.name = name;
         this.age = age;
-        this.carbonRecords = new ArrayList<>();  // Initialize the list
+        this.carbonRecords = new ArrayList<>();
     }
 
     public User(int id, String name, int age, List<CarbonRecord> carbonRecords) {
         this.id = id;
         this.name = name;
         this.age = age;
-        this.carbonRecords = carbonRecords != null ? carbonRecords : new ArrayList<>();  // Ensure the list is not null
+        this.carbonRecords = carbonRecords != null ? carbonRecords : new ArrayList<>();
     }
 
     public User() {
-        this.carbonRecords = new ArrayList<>();  // Initialize the list
+        this.carbonRecords = new ArrayList<>();
     }
 
     public int getId() {

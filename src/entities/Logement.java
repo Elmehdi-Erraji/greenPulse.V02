@@ -13,26 +13,18 @@ public class Logement extends CarbonRecord {
         super(startDate, endDate, amount, type, userId);
         this.energyConsumption = energyConsumption;
         this.energyType = energyType;
-        this.impactValue = calculateImpact(); // Directly set impactValue
+        this.impactValue = calculateImpact();
     }
 
     public double getEnergyConsumption() {
         return energyConsumption;
     }
 
-    public void setEnergyConsumption(double energyConsumption) {
-        this.energyConsumption = energyConsumption;
-        this.impactValue = calculateImpact(); // Update impactValue directly
-    }
 
     public EnergyType getEnergyType() {
         return energyType;
     }
 
-    public void setEnergyType(EnergyType energyType) {
-        this.energyType = energyType;
-        this.impactValue = calculateImpact(); // Update impactValue directly
-    }
 
     @Override
     public double calculateImpact() {

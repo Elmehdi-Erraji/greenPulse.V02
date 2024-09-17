@@ -13,7 +13,6 @@ public abstract class CarbonRecord {
     protected int userId;
     protected double impactValue;
 
-    // Constructor with impactValue as double
     public CarbonRecord(LocalDate startDate, LocalDate endDate, BigDecimal amount, TypeConsommation type, int userId, double impactValue) {
         this.startDate = startDate;
         this.endDate = endDate;
@@ -23,13 +22,10 @@ public abstract class CarbonRecord {
         this.impactValue = impactValue;
     }
 
-    // Constructor with default impactValue
     public CarbonRecord(LocalDate startDate, LocalDate endDate, BigDecimal amount, TypeConsommation type, int userId) {
         this(startDate, endDate, amount, type, userId, 0.0); // Default impactValue
     }
 
-    // Default constructor
-    public CarbonRecord() {}
 
     public int getId() {
         return id;

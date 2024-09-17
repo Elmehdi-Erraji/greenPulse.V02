@@ -13,7 +13,7 @@ public class Transport extends CarbonRecord {
         super(startDate, endDate, amount, type, userId);
         this.distance = distance;
         this.vehicleType = vehicleType;
-        this.impactValue = calculateImpact(); // Directly set impactValue
+        this.impactValue = calculateImpact();
     }
 
     public double getDistance() {
@@ -22,7 +22,7 @@ public class Transport extends CarbonRecord {
 
     public void setDistance(double distance) {
         this.distance = distance;
-        this.impactValue = calculateImpact(); // Update impactValue directly
+        this.impactValue = calculateImpact();
     }
 
     public VehicleType getVehicleType() {
@@ -31,7 +31,7 @@ public class Transport extends CarbonRecord {
 
     public void setVehicleType(VehicleType vehicleType) {
         this.vehicleType = vehicleType;
-        this.impactValue = calculateImpact(); // Update impactValue directly
+        this.impactValue = calculateImpact();
     }
 
     @Override

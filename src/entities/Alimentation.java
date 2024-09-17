@@ -13,25 +13,15 @@ public class Alimentation extends CarbonRecord {
         super(startDate, endDate, amount, type, userId);
         this.foodType = foodType;
         this.foodWeight = foodWeight;
-        this.impactValue = calculateImpact(); // Directly set impactValue
+        this.impactValue = calculateImpact();
     }
 
     public FoodType getFoodType() {
         return foodType;
     }
 
-    public void setFoodType(FoodType foodType) {
-        this.foodType = foodType;
-        this.impactValue = calculateImpact(); // Update impactValue directly
-    }
-
     public double getFoodWeight() {
         return foodWeight;
-    }
-
-    public void setFoodWeight(double foodWeight) {
-        this.foodWeight = foodWeight;
-        this.impactValue = calculateImpact(); // Update impactValue directly
     }
 
     @Override
