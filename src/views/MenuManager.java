@@ -1,5 +1,6 @@
 package views;
 
+import config.Database;
 import entities.*;
 import entities.enums.EnergyType;
 import entities.enums.FoodType;
@@ -25,8 +26,11 @@ public class MenuManager {
     private static CarbonRecordService carbonRecordService;
 
     public static void main(String[] args) {
-        try (Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/GreenPulse", "GreenPulse", "");
-             Scanner scanner = new Scanner(System.in)) {
+        try (
+
+
+                Connection connection = Database.getInstance().getConnection();
+                Scanner scanner = new Scanner(System.in)) {
 
             userService = new UserService(connection);
             CarbonRecordRepository carbonRecordRepository = new CarbonRecordRepository(connection);

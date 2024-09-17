@@ -42,7 +42,6 @@ public class CarbonRecordRepository {
                     if (generatedKeys.next()) {
                         int recordId = generatedKeys.getInt(1);
 
-                        // Insert logement record
                         try (PreparedStatement insertLogementStmt = connection.prepareStatement(insertLogementSql)) {
                             insertLogementStmt.setInt(1, recordId);
                             insertLogementStmt.setDouble(2, logement.getEnergyConsumption());
@@ -227,53 +226,4 @@ public class CarbonRecordRepository {
         return recordsList;
     }
 
-    public List<CarbonRecord> getAllConsumptions() throws SQLException {
-        List<CarbonRecord> consumptions = new ArrayList<>();
-        String sql = "SELECT c.id, c.start_date, c.end_date, c.amount, c.type, " +
-                "a.type_aliment, a.poids, " +
-                "l.consommation_energie, l.type_energie, " +
-                "t.distance_parcourue, t.type_de_vehicule " +
-                "FROM carbonrecords c " +
-                "LEFT JOIN alimentations a ON c.id = a.record_id " +
-                "LEFT JOIN logements l ON c.id = l.record_id " +
-                "LEFT JOIN transports t ON c.id = t.record_id";
-
-        try (PreparedStatement statement = connection.prepareStatement(sql);
-             ResultSet resultSet = statement.executeQuery()) {
-
-            while (resultSet.next()) {
-                int userId = resultSet.getInt("user_id");
-                BigDecimal amount = resultSet.getBigDecimal("amount");
-                LocalDate startDate = resultSet.getDate("start_date").toLocalDate();
-                LocalDate endDate = resultSet.getDate("end_date").toLocalDate();
-                String type = resultSet.getString("type");
-
-                CarbonRecord record = null;
-
-                switch (type) {
-                    case "TRANSPORT":
-                        double distance = resultSet.getDouble("distance_parcourue");
-                        VehicleType vehicleType = VehicleType.valueOf(resultSet.getString("type_de_vehicule"));
-                        record = new Transport(startDate, endDate, amount, TypeConsommation.TRANSPORT, userId, distance, vehicleType);
-                        break;
-                    case "LOGEMENT":
-                        double energyConsumption = resultSet.getDouble("consommation_energie");
-                        EnergyType energyType = EnergyType.valueOf(resultSet.getString("type_energie"));
-                        record = new Logement(startDate, endDate, amount, TypeConsommation.LOGEMENT, userId, energyConsumption, energyType);
-                        break;
-                    case "ALIMENTATION":
-                        FoodType foodType = FoodType.valueOf(resultSet.getString("type_aliment"));
-                        double foodWeight = resultSet.getDouble("poids");
-                        record = new Alimentation(startDate, endDate, amount, TypeConsommation.ALIMENTATION, userId, foodType, foodWeight);
-                        break;
-                }
-
-                if (record != null) {
-                    consumptions.add(record);
-                }
-            }
-        }
-
-        return consumptions;
-    }
 }
